@@ -93,23 +93,23 @@ body{background:var(--bg);min-height:100vh;color:var(--text-dark);font-family:"N
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ===== INTERFACCIA DIPENDENTE ===== */
-.dip-header{background:linear-gradient(135deg,var(--teal-dark),var(--teal));padding:2rem 1.5rem 3rem;position:relative;overflow:hidden}
-.dip-header-orb{position:absolute;right:-30px;top:-30px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.1),transparent);pointer-events:none}
-.dip-header-orb2{position:absolute;left:-20px;bottom:-40px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(0,194,199,0.2),transparent);pointer-events:none}
-.dip-nome{font-size:26px;font-weight:900;color:white;margin-bottom:2px}
-.dip-ruolo{font-size:13px;color:rgba(255,255,255,0.7);font-weight:600;text-transform:uppercase;letter-spacing:1px}
-.dip-menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;padding:1rem}
-.dip-menu-card{background:white;border-radius:var(--radius);padding:1.5rem 1rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.5rem;cursor:pointer;transition:all 0.15s;min-height:120px;text-align:center;border:2px solid transparent}
-.dip-menu-card:active{transform:scale(0.97)}
-.dip-menu-icon{font-size:32px;margin-bottom:4px}
-.dip-menu-label{font-size:14px;font-weight:800;color:var(--text-dark)}
-.dip-menu-sub{font-size:11px;color:var(--text-light);font-weight:600}
-.dip-menu-card.timbra{border-color:var(--teal);background:var(--cyan-light)}
 .dip-screen{min-height:100vh;background:var(--bg);display:flex;flex-direction:column;max-width:420px;margin:0 auto}
-.dip-content{flex:1;overflow-y:auto;padding-bottom:2rem}
-.dip-back-btn{display:flex;align-items:center;gap:0.5rem;padding:1rem 1.5rem;font-size:14px;font-weight:800;color:var(--teal);cursor:pointer;background:none;border:none;font-family:"Nunito",sans-serif}
-.dip-section-title{font-size:20px;font-weight:900;color:var(--text-dark);padding:0 1.5rem;margin-bottom:1rem}
-.timbra-card{background:white;border-radius:var(--radius);margin:0 1rem 0.75rem;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.dip-content{flex:1;padding:0.75rem 1rem 2rem;overflow-y:auto}
+.timbra-card-big{background:var(--teal-dark);border-radius:var(--radius);padding:2rem 1.5rem;margin-bottom:0.75rem;position:relative;overflow:hidden;cursor:pointer;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end}
+.timbra-card-big-orb{position:absolute;right:-20px;top:-20px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.18),transparent);pointer-events:none}
+.timbra-card-big-orb2{position:absolute;left:30%;bottom:-30px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(0,194,199,0.25),transparent);pointer-events:none}
+.timbra-card-big-title{font-size:42px;font-weight:900;color:white;line-height:1}
+.timbra-card-big-sub{font-size:13px;color:rgba(255,255,255,0.7);font-weight:600;margin-top:4px}
+.dip-half-cards{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem}
+.dip-half-card{border-radius:var(--radius);padding:1.25rem 1.25rem 1.5rem;position:relative;overflow:hidden;min-height:110px;cursor:pointer;display:flex;flex-direction:column;justify-content:flex-end}
+.dip-half-orb{position:absolute;right:-15px;bottom:-15px;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.2),transparent);pointer-events:none}
+.dip-half-label{font-size:11px;color:rgba(255,255,255,0.75);font-weight:700;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.5px}
+.dip-half-value{font-size:28px;font-weight:900;color:white;line-height:1}
+.doc-chips{display:flex;gap:0.6rem;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:0.75rem}
+.doc-chips::-webkit-scrollbar{display:none}
+.doc-chip{flex-shrink:0;padding:0.9rem 1.1rem;border-radius:var(--radius-sm);font-size:13px;font-weight:800;cursor:pointer;min-width:90px;text-align:center;color:white}
+.doc-chip-label{font-size:11px;color:rgba(255,255,255,0.8);margin-top:3px;font-weight:600}
+.timbra-card{background:white;border-radius:var(--radius);margin-bottom:0.75rem;padding:1.5rem}
 .timbra-title{font-size:16px;font-weight:800;color:var(--text-dark);margin-bottom:1rem}
 .struttura-select{width:100%;padding:0.85rem 1rem;border-radius:var(--radius-sm);border:2px solid var(--cyan-light);background:var(--bg);font-size:15px;font-weight:700;color:var(--text-dark);font-family:"Nunito",sans-serif;outline:none;margin-bottom:1rem;appearance:none}
 .timbra-btn{width:100%;padding:1.1rem;border-radius:30px;border:none;font-size:17px;font-weight:900;color:white;cursor:pointer;font-family:"Nunito",sans-serif;transition:all 0.15s}
@@ -120,7 +120,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text-dark);font-family:"N
 .timbra-status.ok{background:#D5F0E0;color:#1A6B3A}
 .timbra-status.err{background:#FCE4E4;color:#7A1A1A}
 .timbra-status.warn{background:#FEF3CD;color:#7A5800}
-.turno-card{background:white;border-radius:var(--radius);margin:0 1rem 0.75rem;padding:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.turno-card{background:white;border-radius:var(--radius);margin-bottom:0.75rem;padding:1.25rem}
 .turno-data{font-size:12px;font-weight:800;color:var(--text-light);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem}
 .turno-tipo{font-size:18px;font-weight:900;color:var(--text-dark);margin-bottom:0.25rem}
 .turno-orari{font-size:14px;font-weight:700;color:var(--teal)}
@@ -130,8 +130,8 @@ body{background:var(--bg);min-height:100vh;color:var(--text-dark);font-family:"N
 .turno-pomeriggio{background:#FFE4D0;color:#7A3000}
 .turno-notte{background:#E0F0FF;color:#1A4A7A}
 .turno-giornata{background:#D5F0E0;color:#1A6B3A}
-.anagrafica-card{background:white;border-radius:var(--radius);margin:0 1rem 0.75rem;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
-.ana-row{display:flex;justify-content:space-between;align-items:center;padding:0.75rem 0;border-bottom:1px solid var(--bg)}
+.ana-card{background:white;border-radius:var(--radius);margin-bottom:0.75rem;overflow:hidden}
+.ana-row{display:flex;justify-content:space-between;align-items:center;padding:0.85rem 1rem;border-bottom:1px solid var(--bg)}
 .ana-row:last-child{border-bottom:none}
 .ana-label{font-size:12px;font-weight:800;color:var(--text-light);text-transform:uppercase;letter-spacing:0.5px}
 .ana-value{font-size:14px;font-weight:700;color:var(--text-dark);text-align:right}
@@ -283,82 +283,149 @@ function renderLogin() {
 // ===== INTERFACCIA DIPENDENTE =====
 function renderDipendente() {
   var u = S.user;
-  var firstName = u.nome ? u.nome.split(" ")[0] : "utente";
   var h = "<div class=\"dip-screen\">";
 
-  // Header sempre visibile
-  h += "<div class=\"dip-header\">";
-  h += "<div class=\"dip-header-orb\"></div><div class=\"dip-header-orb2\"></div>";
-  if(S.dipView !== "home") {
-    h += "<button class=\"dip-back-btn\" onclick=\"S.dipView='home';render()\" style=\"color:rgba(255,255,255,0.8);padding:0 0 1rem 0;background:none;border:none;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer\">← Indietro</button>";
+  // Header identico all'admin
+  h += "<div class=\"app-header\">";
+  h += "<div class=\"app-greeting\">Buongiorno,<br>" + (u.nome ? u.nome.split(" ")[0] : "utente") + "</div>";
+  h += "<div style='display:flex;align-items:center;gap:0.5rem'>";
+  if(u.mansione) h += "<div style='font-size:12px;font-weight:700;color:var(--teal)'>" + u.mansione + "</div>";
+  h += "<div class=\"app-logo\">" + LOGO_IMG + "</div>";
+  h += "</div></div>";
+
+  // Tab nav dipendente
+  h += "<div style='padding:0 1rem'><div class=\"nav-tabs\">";
+  var tabs = ["Home","Ferie/ROL","Informazioni"];
+  for(var t=0; t<tabs.length; t++) {
+    var tact = (S.dipTab===tabs[t]||(t===0&&!S.dipTab)) ? "active" : "inactive";
+    h += "<div class=\"nav-tab " + tact + "\" onclick=\"S.dipTab='" + tabs[t] + "';render()\">" + tabs[t] + "</div>";
   }
-  h += "<div class=\"dip-nome\">" + u.nome + "</div>";
-  h += "<div class=\"dip-ruolo\">Dipendente</div>";
-  h += "</div>";
+  h += "</div></div>";
 
   h += "<div class=\"dip-content\">";
-
-  if(S.dipView === "home") {
-    h += renderDipHome();
-  } else if(S.dipView === "timbra") {
-    h += renderDipTimbra();
-  } else if(S.dipView === "turni") {
-    h += renderDipTurni();
-  } else if(S.dipView === "anagrafica") {
-    h += renderDipAnagrafica();
-  } else if(S.dipView === "documenti") {
-    h += renderDipDocumenti();
-  }
-
+  var tab = S.dipTab || "Home";
+  if(tab === "Home") h += renderDipHome();
+  else if(tab === "Ferie/ROL") h += renderDipFerie();
+  else if(tab === "Informazioni") h += renderDipInfo();
+  else if(tab === "timbra") h += renderDipTimbra();
+  else if(tab === "turni") h += renderDipTurni();
+  else if(tab === "profilo") h += renderDipProfilo();
   h += "</div>";
 
   // Bottom nav dipendente
   h += "<div class=\"bottom-nav\">";
   var dipViews = [
-    {id:"home", icon:"<svg viewBox='0 0 24 24'><path d='M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>", label:"Home"},
-    {id:"timbra", icon:"<svg viewBox='0 0 24 24'><circle cx='12' cy='12' r='10'/><polyline points='12 6 12 12 16 14'/></svg>", label:"Timbra"},
-    {id:"turni", icon:"<svg viewBox='0 0 24 24'><rect x='3' y='4' width='18' height='18' rx='2'/><line x1='16' y1='2' x2='16' y2='6'/><line x1='8' y1='2' x2='8' y2='6'/><line x1='3' y1='10' x2='21' y2='10'/></svg>", label:"Turni"},
-    {id:"anagrafica", icon:"<svg viewBox='0 0 24 24'><path d='M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>", label:"Profilo"},
-    {id:"logout_dip", icon:"<svg viewBox='0 0 24 24'><path d='M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1'/></svg>", label:"Esci"}
+    {id:"home_nav", icon:"<svg viewBox='0 0 24 24'><path d='M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>", label:"Home", tab:"Home"},
+    {id:"timbra_nav", icon:"<svg viewBox='0 0 24 24'><circle cx='12' cy='12' r='10'/><polyline points='12 6 12 12 16 14'/></svg>", label:"Timbra", tab:"timbra"},
+    {id:"turni_nav", icon:"<svg viewBox='0 0 24 24'><rect x='3' y='4' width='18' height='18' rx='2'/><line x1='16' y1='2' x2='16' y2='6'/><line x1='8' y1='2' x2='8' y2='6'/><line x1='3' y1='10' x2='21' y2='10'/></svg>", label:"Turni", tab:"turni"},
+    {id:"profilo_nav", icon:"<svg viewBox='0 0 24 24'><path d='M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>", label:"Profilo", tab:"profilo"},
+    {id:"logout_dip", icon:"<svg viewBox='0 0 24 24'><path d='M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1'/></svg>", label:"Esci", tab:""}
   ];
   for(var i=0; i<dipViews.length; i++) {
     var dv = dipViews[i];
-    var act = S.dipView === dv.id ? "active" : "";
-    var onclick = dv.id === "logout_dip" ? "doLogout()" : "S.dipView='" + dv.id + "';render()";
+    var act = (S.dipTab===dv.tab||(dv.tab==="Home"&&!S.dipTab)) ? "active" : "";
+    var onclick = dv.id === "logout_dip" ? "doLogout()" : "S.dipTab='" + dv.tab + "';render()";
     h += "<div class=\"bnav-item " + act + "\" onclick=\"" + onclick + "\">";
     h += "<div class=\"bnav-icon\">" + dv.icon + "</div>";
     h += "<div class=\"bnav-label\">" + dv.label + "</div></div>";
   }
-  h += "</div>";
-  h += "</div>";
+  h += "</div></div>";
   document.getElementById("root").innerHTML = h;
 }
 
 function renderDipHome() {
-  var h = "<div class=\"dip-menu-grid\">";
-  var cards = [
-    {id:"timbra", icon:"⏱️", label:"Timbra", sub:"Entrata / Uscita", cls:"timbra"},
-    {id:"turni", icon:"📅", label:"I miei turni", sub:"Calendario personale", cls:""},
-    {id:"anagrafica", icon:"👤", label:"Profilo", sub:"I miei dati", cls:""},
-    {id:"documenti", icon:"📄", label:"Documenti", sub:"Upload e download", cls:""}
+  var h = "";
+
+  // Card grande Timbra
+  h += "<div class=\"timbra-card-big\" onclick=\"S.dipTab='timbra';render()\">";
+  h += "<div class=\"timbra-card-big-orb\"></div><div class=\"timbra-card-big-orb2\"></div>";
+  h += "<div class=\"timbra-card-big-title\">Timbra</div>";
+  h += "<div class=\"timbra-card-big-sub\">Entrata - uscita</div>";
+  h += "</div>";
+
+  // Due card medie: Turni e Profilo
+  h += "<div class=\"dip-half-cards\">";
+  h += "<div class=\"dip-half-card\" style='background:var(--cyan)' onclick=\"S.dipTab='turni';render()\">";
+  h += "<div class=\"dip-half-orb\"></div>";
+  h += "<div class=\"dip-half-label\">I miei</div>";
+  h += "<div class=\"dip-half-value\">Turni</div>";
+  h += "</div>";
+  h += "<div class=\"dip-half-card\" style='background:var(--teal)' onclick=\"S.dipTab='profilo';render()\">";
+  h += "<div class=\"dip-half-orb\"></div>";
+  h += "<div class=\"dip-half-label\">Il mio</div>";
+  h += "<div class=\"dip-half-value\">Profilo</div>";
+  h += "</div>";
+  h += "</div>";
+
+  // Documenti caricati
+  h += "<div class=\"section-label\"><div class=\"section-title\">Documenti caricati</div></div>";
+  h += "<div class=\"doc-chips\">";
+  var docs = [
+    {label:"Contratto", sub:"di lavoro", col:"#E8603A"},
+    {label:"Informativa", sub:"privacy", col:"#E8904A"},
+    {label:"Nomina", sub:"Incaricato", col:"#F0B080"}
   ];
-  for(var i=0; i<cards.length; i++) {
-    var c = cards[i];
-    h += "<div class=\"dip-menu-card " + c.cls + "\" onclick=\"S.dipView='" + c.id + "';render()\">";
-    h += "<div class=\"dip-menu-icon\">" + c.icon + "</div>";
-    h += "<div class=\"dip-menu-label\">" + c.label + "</div>";
-    h += "<div class=\"dip-menu-sub\">" + c.sub + "</div>";
+  for(var d=0; d<docs.length; d++) {
+    h += "<div class=\"doc-chip\" style='background:" + docs[d].col + "'>";
+    h += "<div style='font-size:14px;font-weight:900'>" + docs[d].label + "</div>";
+    h += "<div class=\"doc-chip-label\">" + docs[d].sub + "</div>";
     h += "</div>";
   }
   h += "</div>";
+
+  h += "<button class=\"update-btn\" onclick=\"render()\">Aggiornamenti</button>";
+  return h;
+}
+
+function renderDipFerie() {
+  var h = "";
+  h += "<div class=\"dip-half-cards\">";
+  h += "<div class=\"dip-half-card\" style='background:var(--teal-dark);min-height:130px'>";
+  h += "<div class=\"dip-half-orb\"></div>";
+  h += "<div class=\"dip-half-value\" style='font-size:42px'>5</div>";
+  h += "<div class=\"dip-half-label\">Ferie residue</div>";
+  h += "</div>";
+  h += "<div class=\"dip-half-card\" style='background:var(--teal);min-height:130px'>";
+  h += "<div class=\"dip-half-orb\"></div>";
+  h += "<div class=\"dip-half-value\" style='font-size:42px'>20</div>";
+  h += "<div class=\"dip-half-label\">Goduto</div>";
+  h += "</div>";
+  h += "</div>";
+
+  h += "<div class=\"timbra-card-big\" style='background:var(--cyan);min-height:100px'>";
+  h += "<div class=\"timbra-card-big-orb\"></div>";
+  h += "<div class=\"timbra-card-big-title\" style='font-size:28px'>Nuova richiesta</div>";
+  h += "<div class=\"timbra-card-big-sub\">Ferie o ROL</div>";
+  h += "</div>";
+
+  h += "<button class=\"update-btn\" onclick=\"render()\">Aggiornamenti</button>";
+  return h;
+}
+
+function renderDipInfo() {
+  var h = "";
+  h += "<div class=\"stat-card\"><div class=\"stat-card-orb\"></div>";
+  h += "<div class=\"stat-label\">Ore lavorate questa settimana</div>";
+  h += "<div class=\"stat-number\">23</div>";
+  h += "</div>";
+
+  h += "<div class=\"stat-card\" style='background:var(--cyan)'><div class=\"stat-card-orb\"></div>";
+  h += "<div class=\"stat-label\">Ore residue</div>";
+  h += "<div class=\"stat-number\">21</div>";
+  h += "</div>";
+
+  h += "<div class=\"stat-card\" style='background:var(--coral)'><div class=\"stat-card-orb\"></div>";
+  h += "<div class=\"stat-label\">Prossimo turno</div>";
+  h += "<div class=\"stat-number\" style='font-size:38px'>Domani</div>";
+  h += "<div class=\"stat-sub\">08:00 — 13:00 · Struttura 1</div>";
+  h += "</div>";
+
+  h += "<button class=\"update-btn\" onclick=\"render()\">Aggiornamenti</button>";
   return h;
 }
 
 function renderDipTimbra() {
-  var h = "<div style='padding:0 1rem'>";
-  h += "<div style='font-size:20px;font-weight:900;color:var(--text-dark);padding:1rem 0.5rem 0.75rem'>Timbratura</div>";
-  h += "</div>";
-
+  var h = "";
   h += "<div class=\"timbra-card\">";
   h += "<div class=\"timbra-title\">Seleziona struttura</div>";
   h += "<select class=\"struttura-select\" id=\"sel-struttura\" onchange=\"S.timbraStruttura=this.value\">";
@@ -368,29 +435,23 @@ function renderDipTimbra() {
     h += "<option value='" + STRUTTURE[i].id + "' " + sel + ">" + STRUTTURE[i].nome + "</option>";
   }
   h += "</select>";
-
   if(!S.timbratoEntrata) {
     h += "<button class=\"timbra-btn entrata\" onclick=\"doTimbraEntrata()\">⏱ Timbra Entrata</button>";
   } else {
     h += "<div style=\"background:var(--cyan-light);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1rem\">";
-    h += "<div style=\"font-size:12px;font-weight:800;color:var(--teal);text-transform:uppercase;letter-spacing:0.5px\">Entrata registrata</div>";
+    h += "<div style=\"font-size:12px;font-weight:800;color:var(--teal);text-transform:uppercase\">Entrata registrata</div>";
     h += "<div style=\"font-size:24px;font-weight:900;color:var(--teal-dark)\">" + S.timbratoEntrata + "</div>";
-    h += "<div style=\"font-size:12px;color:var(--text-light);font-weight:600\">" + (STRUTTURE.find(function(s){return s.id===S.timbraStruttura;})||{nome:""}).nome + "</div>";
+    h += "<div style=\"font-size:12px;color:var(--text-light);font-weight:600\">" + ((STRUTTURE.find(function(s){return s.id===S.timbraStruttura;})||{nome:""}).nome) + "</div>";
     h += "</div>";
     h += "<button class=\"timbra-btn uscita\" onclick=\"doTimbraUscita()\">🔴 Timbra Uscita</button>";
   }
-
-  if(S.timbraMsg) {
-    h += "<div class=\"timbra-status " + S.timbraMsgType + "\">" + S.timbraMsg + "</div>";
-  }
+  if(S.timbraMsg) h += "<div class=\"timbra-status " + S.timbraMsgType + "\">" + S.timbraMsg + "</div>";
   h += "</div>";
 
-  // Ultime timbrature (placeholder)
   h += "<div class=\"timbra-card\">";
   h += "<div class=\"timbra-title\">Ultime timbrature</div>";
   h += "<div style=\"text-align:center;padding:1rem;color:var(--text-light);font-size:13px;font-weight:700\">Nessuna timbratura recente</div>";
   h += "</div>";
-
   return h;
 }
 
@@ -484,70 +545,49 @@ function doTimbraUscita() {
 }
 
 function renderDipTurni() {
-  var h = "<div style='padding:0 1rem'>";
-  h += "<div style='font-size:20px;font-weight:900;color:var(--text-dark);padding:1rem 0.5rem 0.75rem'>I miei turni</div>";
-  h += "</div>";
-
-  // Turni di esempio
   var turni = [
     {data:"2026-05-09", tipo:"Mattina", oraInizio:"08:00", oraFine:"13:00", struttura:"Struttura 1"},
     {data:"2026-05-10", tipo:"Pomeriggio", oraInizio:"14:00", oraFine:"20:00", struttura:"Struttura 1"},
     {data:"2026-05-12", tipo:"Mattina", oraInizio:"08:00", oraFine:"13:00", struttura:"Struttura 1"},
     {data:"2026-05-14", tipo:"Giornata", oraInizio:"09:00", oraFine:"17:00", struttura:"Struttura 1"}
   ];
-
+  var h = "";
   if(turni.length === 0) {
     h += "<div class=\"timbra-card\"><div style='text-align:center;color:var(--text-light);font-weight:700'>Nessun turno trovato</div></div>";
   } else {
     for(var i=0; i<turni.length; i++) {
       var t = turni[i];
-      var tipoCls = "turno-" + t.tipo.toLowerCase();
       h += "<div class=\"turno-card\">";
       h += "<div class=\"turno-data\">" + fmtDateIt(t.data) + "</div>";
       h += "<div style='display:flex;align-items:center;justify-content:space-between'>";
       h += "<div class=\"turno-tipo\">" + t.tipo + "</div>";
-      h += "<span class=\"turno-badge " + tipoCls + "\">" + t.tipo + "</span>";
+      h += "<span class=\"turno-badge turno-" + t.tipo.toLowerCase() + "\">" + t.tipo + "</span>";
       h += "</div>";
       h += "<div class=\"turno-orari\">🕐 " + t.oraInizio + " — " + t.oraFine + "</div>";
       h += "<div class=\"turno-struttura\">📍 " + t.struttura + "</div>";
       h += "</div>";
     }
   }
-
-  h += "<button class=\"update-btn\" style='margin:0 1rem;width:calc(100% - 2rem)' onclick=\"render()\">Aggiorna</button>";
+  h += "<button class=\"update-btn\" onclick=\"render()\">Aggiorna</button>";
   return h;
 }
 
-function renderDipAnagrafica() {
+function renderDipProfilo() {
   var u = S.user;
-  var h = "<div style='padding:0 1rem'>";
-  h += "<div style='font-size:20px;font-weight:900;color:var(--text-dark);padding:1rem 0.5rem 0.75rem'>Il mio profilo</div>";
+  var h = "";
+  h += "<div class=\"stat-card\"><div class=\"stat-card-orb\"></div>";
+  h += "<div class=\"stat-label\">Nome completo</div>";
+  h += "<div style='font-size:26px;font-weight:900;color:white'>" + u.nome + "</div>";
+  h += "<div class=\"stat-sub\">" + (u.ruolo||"Dipendente") + "</div>";
   h += "</div>";
-  h += "<div class=\"anagrafica-card\">";
-  h += "<div class=\"ana-row\"><div class=\"ana-label\">Nome completo</div><div class=\"ana-value\">" + u.nome + "</div></div>";
-  h += "<div class=\"ana-row\"><div class=\"ana-label\">Ruolo</div><div class=\"ana-value\">" + u.ruolo + "</div></div>";
+  h += "<div class=\"ana-card\">";
   h += "<div class=\"ana-row\"><div class=\"ana-label\">Mansione</div><div class=\"ana-value\">—</div></div>";
   h += "<div class=\"ana-row\"><div class=\"ana-label\">Struttura</div><div class=\"ana-value\">—</div></div>";
   h += "<div class=\"ana-row\"><div class=\"ana-label\">Tipo contratto</div><div class=\"ana-value\">—</div></div>";
   h += "<div class=\"ana-row\"><div class=\"ana-label\">Email</div><div class=\"ana-value\">—</div></div>";
+  h += "<div class=\"ana-row\"><div class=\"ana-label\">Telefono</div><div class=\"ana-value\">—</div></div>";
   h += "</div>";
-  h += "<div style='padding:0 1rem;font-size:12px;color:var(--text-light);font-weight:600;text-align:center'>I dati completi saranno disponibili dopo la connessione al database dipendenti.</div>";
-  return h;
-}
-
-function renderDipDocumenti() {
-  var h = "<div style='padding:0 1rem'>";
-  h += "<div style='font-size:20px;font-weight:900;color:var(--text-dark);padding:1rem 0.5rem 0.75rem'>Documenti</div>";
-  h += "</div>";
-  h += "<div class=\"timbra-card\">";
-  h += "<div class=\"timbra-title\">I miei documenti</div>";
-  h += "<div style='text-align:center;padding:1rem;color:var(--text-light);font-size:13px;font-weight:700'>Nessun documento disponibile</div>";
-  h += "</div>";
-  h += "<div class=\"timbra-card\">";
-  h += "<div class=\"timbra-title\">Carica documento</div>";
-  h += "<input type='file' accept='application/pdf,image/*' style='width:100%;padding:0.5rem;font-family:Nunito,sans-serif;font-size:13px' id='doc-upload'/>";
-  h += "<button class=\"timbra-btn entrata\" style='margin-top:1rem' onclick=\"alert('Funzione in arrivo!')\">📤 Carica</button>";
-  h += "</div>";
+  h += "<div style='font-size:12px;color:var(--text-light);font-weight:600;text-align:center;padding:0.5rem 0'>I dati completi saranno disponibili presto.</div>";
   return h;
 }
 
