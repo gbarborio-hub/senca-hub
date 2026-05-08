@@ -603,9 +603,21 @@ function renderDipTimbra() {
   if(S.timbraMsg) h += "<div class=\"timbra-status " + S.timbraMsgType + "\">" + S.timbraMsg + "</div>";
   h += "</div>";
 
-  h += "<div class=\"timbra-card\">";
-  h += "<div class=\"timbra-title\">Ultime timbrature</div>";
-  h += "<div style=\"text-align:center;padding:1rem;color:var(--text-light);font-size:13px;font-weight:700\">Nessuna timbratura recente</div>";
+  h += "<div class='timbra-card'>";
+  h += "<div class='timbra-title'>Ultime timbrature</div>";
+  var ultime = TIMBRATURE_DIP.slice().sort(function(a,b){ return a.data > b.data ? -1 : 1; }).slice(0,5);
+  if(ultime.length === 0) {
+    h += "<div style='text-align:center;padding:1rem;color:var(--text-light);font-size:13px;font-weight:700'>Nessuna timbratura recente</div>";
+  } else {
+    for(var j=0; j<ultime.length; j++) {
+      var tb = ultime[j];
+      h += "<div class='ana-row'>";
+      h += "<div><div class='ana-label'>" + fmtDateIt(tb.data) + " · " + tb.struttura + "</div>";
+      h += "<div style='font-size:13px;font-weight:700;color:var(--teal)'>🕐 " + (tb.oraEntrata||"—") + " → " + (tb.oraUscita||"—") + "</div></div>";
+      h += "<div style='font-size:14px;font-weight:900;color:var(--teal-dark)'>" + (tb.oreTotali > 0 ? tb.oreTotali.toFixed(2)+"h" : "—") + "</div>";
+      h += "</div>";
+    }
+  }
   h += "</div>";
   return h;
 }
