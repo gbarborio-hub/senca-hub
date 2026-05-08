@@ -458,20 +458,42 @@ function fetchIncaricati() {
 }
 
 function parseIncaricato(item) {
-  // I dati arrivano piatti da Make (non dentro properties_value)
-  var p = item;
-  var nome = p.Nome || "";
-  var cognome = p.Cognome || "";
+  var p = item["properties_value"] || item;
+
+  // Nome - array di rich text
+  var nome = "";
+  if(Array.isArray(p.Nome) && p.Nome[0] && p.Nome[0].text) nome = p.Nome[0].text.content || "";
+
+  // Cognome - array di rich text
+  var cognome = "";
+  if(Array.isArray(p.Cognome) && p.Cognome[0] && p.Cognome[0].text) cognome = p.Cognome[0].text.content || "";
+
+  // Email - stringa diretta
   var email = p.Email || "";
-  var mansione = p.Mansione || "";
+
+  // Mansione - oggetto con .name
+  var mansione = "";
+  if(p.Mansione && p.Mansione.name) mansione = p.Mansione.name;
+
+  // Tipo di contratto - stringa diretta
   var contratto = p["Tipo di contratto"] || "";
-  var nomina = p.Nomina || "Non inviata";
-  var dataInvio = p["date:Data invio:start"] || "";
-  var dataFirma = p["date:Data firma:start"] || "";
+
+  // Nomina - oggetto con .name
+  var nomina = "Non inviata";
+  if(p.Nomina && p.Nomina.name) nomina = p.Nomina.name;
+
+  // Data invio - oggetto con .start
+  var dataInvio = "";
+  if(p["Data invio"] && p["Data invio"].start) dataInvio = p["Data invio"].start;
+
+  // Data firma - oggetto con .start
+  var dataFirma = "";
+  if(p["Data firma"] && p["Data firma"].start) dataFirma = p["Data firma"].start;
+
   var pageId = item.id || "";
+
   return {nome:nome, cognome:cognome, email:email, mansione:mansione, contratto:contratto, nomina:nomina, dataInvio:dataInvio, dataFirma:dataFirma, pageId:pageId};
 }
-
 function azioneNomina(pageId, email, nome, cognome, stato) {
   var oggi = new Date().toISOString().split("T")[0];
   fetch(AZIONE_URL, {
