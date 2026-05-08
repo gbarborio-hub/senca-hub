@@ -147,12 +147,52 @@ var PRIVACY_URL = "https://hook.eu1.make.com/dmdvislgavso2dhh7ccp5iy4pa69vuox";
 var AZIONE_URL = "https://hook.eu1.make.com/6vp67eiqkpd861to9dqqolvfft62ahcq";
 var TIMBRA_URL = "https://hook.eu1.make.com/ovyaryk28yqdcl6q2a2v1sasxo5hktj1";
 var STRUTTURE_URL = "https://hook.eu1.make.com/xw0j4gjineix3dbogtdayeu0jm4tv6wq";
+var TURNI_URL = "https://hook.eu1.make.com/asyef6nu2ll64d3u7ed5qdjpk4w9aneh";
 
 var LOGO_IMG = "<img src='https://raw.githubusercontent.com/gbarborio-hub/senca-hub/main/www_senca_it.svg' style='width:100%;height:100%;object-fit:contain'/>";
 
 var POSTS = [];
 var INCARICATI = [];
 var TURNI_DIP = [];
+
+function fetchTurni() {
+  fetch(TURNI_URL, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({nome: S.user.nome})
+  })
+  .then(function(r){ return r.text(); })
+  .then(function(text){
+    try {
+      var data = JSON.parse(text);
+      var raw = Array.isArray(data) ? data : [data];
+      TURNI_DIP = raw.map(function(item) {
+        var p = (item && item.properties_value) ? item.properties_value : item;
+        var titolo = "";
+        if(p.Titolo && Array.isArray(p.Titolo) && p.Titolo[0]) titolo = p.Titolo[0].plain_text || "";
+        var dipendente = typeof p.Dipendente === "string" ? p.Dipendente : (p.Dipendente && p.Dipendente[0] ? p.Dipendente[0].plain_text || "" : "");
+        var struttura = typeof p.Struttura === "string" ? p.Struttura : (p.Struttura && p.Struttura[0] ? p.Struttura[0].plain_text || "" : "");
+        var tipo = (p["Tipo turno"] && p["Tipo turno"].name) ? p["Tipo turno"].name : "";
+        var data2 = (p.Data && p.Data.start) ? p.Data.start.split("T")[0] : "";
+        var oraInizio = typeof p["Ora inizio"] === "string" ? p["Ora inizio"] : (p["Ora inizio"] && p["Ora inizio"][0] ? p["Ora inizio"][0].plain_text || "" : "");
+        var oraFine = typeof p["Ora fine"] === "string" ? p["Ora fine"] : (p["Ora fine"] && p["Ora fine"][0] ? p["Ora fine"][0].plain_text || "" : "");
+        return {titolo:titolo, dipendente:dipendente, struttura:struttura, tipo:tipo, data:data2, oraInizio:oraInizio, oraFine:oraFine};
+      }).filter(function(t){ return t.data; })
+        .sort(function(a,b){ return a.data > b.data ? 1 : -1; });
+      S.loadingTurni = false;
+      render();
+    } catch(e) {
+      console.log("Errore fetch turni:", e);
+      S.loadingTurni = false;
+      render();
+    }
+  })
+  .catch(function(e){
+    console.log("Errore fetch turni:", e);
+    S.loadingTurni = false;
+    render();
+  });
+}
 
 // Strutture — caricate da Notion
 var STRUTTURE = [];
@@ -265,7 +305,7 @@ function doLogin() {
       S.loggedIn = true;
       S.user = {nome:res.nome, ruolo:res.ruolo||"Utente", username:uname};
       if(isAdmin()) { fetchPosts(); fetchIncaricati(); }
-      if(isDipendente()) { fetchStrutture(); }
+      if(isDipendente()) { fetchStrutture(); fetchTurni(); }
       render();
     } else {
       err.textContent = "Credenziali non valide. Riprova.";
@@ -356,7 +396,7 @@ function renderDipendente() {
   for(var i=0; i<dipViews.length; i++) {
     var dv = dipViews[i];
     var act = (S.dipTab===dv.tab||(dv.tab==="Home"&&!S.dipTab)) ? "active" : "";
-    var onclick = dv.id === "logout_dip" ? "doLogout()" : "S.dipTab='" + dv.tab + "';render()";
+    var onclick = dv.id === "logout_dip" ? "doLogout()" : "S.dipTab='" + dv.tab + "';if('" + dv.tab + "'==='turni'&&TURNI_DIP.length===0){S.loadingTurni=true;fetchTurni();}render()";
     h += "<div class=\"bnav-item " + act + "\" onclick=\"" + onclick + "\">";
     h += "<div class=\"bnav-icon\">" + dv.icon + "</div>";
     h += "<div class=\"bnav-label\">" + dv.label + "</div></div>";
@@ -435,24 +475,31 @@ function renderDipFerie() {
 }
 
 function renderDipInfo() {
+  var oggi = new Date().toISOString().split("T")[0];
+  var prossimo = TURNI_DIP.find(function(t){ return t.data >= oggi; });
   var h = "";
-  h += "<div class=\"stat-card\"><div class=\"stat-card-orb\"></div>";
-  h += "<div class=\"stat-label\">Ore lavorate questa settimana</div>";
-  h += "<div class=\"stat-number\">23</div>";
+  h += "<div class='stat-card'><div class='stat-card-orb'></div>";
+  h += "<div class='stat-label'>Ore lavorate questa settimana</div>";
+  h += "<div class='stat-number'>—</div>";
   h += "</div>";
 
-  h += "<div class=\"stat-card\" style='background:var(--cyan)'><div class=\"stat-card-orb\"></div>";
-  h += "<div class=\"stat-label\">Ore residue</div>";
-  h += "<div class=\"stat-number\">21</div>";
+  h += "<div class='stat-card' style='background:var(--cyan)'><div class='stat-card-orb'></div>";
+  h += "<div class='stat-label'>Ore residue</div>";
+  h += "<div class='stat-number'>—</div>";
   h += "</div>";
 
-  h += "<div class=\"stat-card\" style='background:var(--coral)'><div class=\"stat-card-orb\"></div>";
-  h += "<div class=\"stat-label\">Prossimo turno</div>";
-  h += "<div class=\"stat-number\" style='font-size:38px'>Domani</div>";
-  h += "<div class=\"stat-sub\">08:00 — 13:00 · Struttura 1</div>";
+  h += "<div class='stat-card' style='background:var(--coral)'><div class='stat-card-orb'></div>";
+  h += "<div class='stat-label'>Prossimo turno</div>";
+  if(prossimo) {
+    h += "<div class='stat-number' style='font-size:28px'>" + fmtDateIt(prossimo.data) + "</div>";
+    h += "<div class='stat-sub'>" + prossimo.tipo + " · " + prossimo.oraInizio + " — " + prossimo.oraFine + " · " + prossimo.struttura + "</div>";
+  } else {
+    h += "<div class='stat-number' style='font-size:28px'>—</div>";
+    h += "<div class='stat-sub'>Nessun turno programmato</div>";
+  }
   h += "</div>";
 
-  h += "<button class=\"update-btn\" onclick=\"render()\">Aggiornamenti</button>";
+  h += "<button class='update-btn' onclick=\"fetchTurni()\">Aggiorna</button>";
   return h;
 }
 
@@ -612,30 +659,39 @@ function doTimbraUscita() {
 }
 
 function renderDipTurni() {
-  var turni = [
-    {data:"2026-05-09", tipo:"Mattina", oraInizio:"08:00", oraFine:"13:00", struttura:"Struttura 1"},
-    {data:"2026-05-10", tipo:"Pomeriggio", oraInizio:"14:00", oraFine:"20:00", struttura:"Struttura 1"},
-    {data:"2026-05-12", tipo:"Mattina", oraInizio:"08:00", oraFine:"13:00", struttura:"Struttura 1"},
-    {data:"2026-05-14", tipo:"Giornata", oraInizio:"09:00", oraFine:"17:00", struttura:"Struttura 1"}
-  ];
+  if(S.loadingTurni) {
+    return "<div style='display:flex;align-items:center;justify-content:center;height:40vh;flex-direction:column;gap:1rem'><div class='spinner' style='width:32px;height:32px;border-width:3px'></div><div style='color:#7A9999;font-weight:700;font-size:14px'>Caricamento turni...</div></div>";
+  }
   var h = "";
-  if(turni.length === 0) {
-    h += "<div class=\"timbra-card\"><div style='text-align:center;color:var(--text-light);font-weight:700'>Nessun turno trovato</div></div>";
+  if(TURNI_DIP.length === 0) {
+    h += "<div class='timbra-card'><div style='text-align:center;padding:1rem;color:var(--text-light);font-weight:700'>Nessun turno trovato</div></div>";
   } else {
-    for(var i=0; i<turni.length; i++) {
-      var t = turni[i];
-      h += "<div class=\"turno-card\">";
-      h += "<div class=\"turno-data\">" + fmtDateIt(t.data) + "</div>";
-      h += "<div style='display:flex;align-items:center;justify-content:space-between'>";
-      h += "<div class=\"turno-tipo\">" + t.tipo + "</div>";
-      h += "<span class=\"turno-badge turno-" + t.tipo.toLowerCase() + "\">" + t.tipo + "</span>";
+    // Prossimo turno in evidenza
+    var oggi = new Date().toISOString().split("T")[0];
+    var prossimo = TURNI_DIP.find(function(t){ return t.data >= oggi; });
+    if(prossimo) {
+      h += "<div class='stat-card' style='background:var(--coral)'><div class='stat-card-orb'></div>";
+      h += "<div class='stat-label'>Prossimo turno</div>";
+      h += "<div style='font-size:22px;font-weight:900;color:white'>" + fmtDateIt(prossimo.data) + " — " + prossimo.tipo + "</div>";
+      h += "<div class='stat-sub'>🕐 " + prossimo.oraInizio + " — " + prossimo.oraFine + " · " + prossimo.struttura + "</div>";
       h += "</div>";
-      h += "<div class=\"turno-orari\">🕐 " + t.oraInizio + " — " + t.oraFine + "</div>";
-      h += "<div class=\"turno-struttura\">📍 " + t.struttura + "</div>";
+    }
+    h += "<div class='section-label'><div class='section-title'>Tutti i turni</div></div>";
+    for(var i=0; i<TURNI_DIP.length; i++) {
+      var t = TURNI_DIP[i];
+      var isPassato = t.data < oggi;
+      h += "<div class='turno-card' style='opacity:" + (isPassato ? "0.6" : "1") + "'>";
+      h += "<div class='turno-data'>" + fmtDateIt(t.data) + "</div>";
+      h += "<div style='display:flex;align-items:center;justify-content:space-between'>";
+      h += "<div class='turno-tipo'>" + t.tipo + "</div>";
+      h += "<span class='turno-badge turno-" + t.tipo.toLowerCase() + "'>" + t.tipo + "</span>";
+      h += "</div>";
+      h += "<div class='turno-orari'>🕐 " + t.oraInizio + " — " + t.oraFine + "</div>";
+      h += "<div class='turno-struttura'>📍 " + t.struttura + "</div>";
       h += "</div>";
     }
   }
-  h += "<button class=\"update-btn\" onclick=\"render()\">Aggiorna</button>";
+  h += "<button class='update-btn' onclick=\"S.loadingTurni=true;fetchTurni()\">Aggiorna</button>";
   return h;
 }
 
