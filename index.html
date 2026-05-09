@@ -650,6 +650,41 @@ function doTimbraEntrata() {
   var strut = STRUTTURE.find(function(s){ return s.id === strutId; });
   if(!strut) return;
 
+  // Controllo turno del giorno
+  var now = new Date();
+  var oggi = now.toISOString().split("T")[0];
+  var turniOggi = TURNI_DIP.filter(function(t){ return t.data === oggi; });
+
+  if(turniOggi.length === 0) {
+    S.timbraMsg = "❌ Nessun turno previsto oggi. Timbratura non autorizzata.";
+    S.timbraMsgType = "err";
+    render();
+    return;
+  }
+
+  // Controlla se l'orario attuale è entro 30 min dall'inizio di un turno
+  var minutiAttuali = now.getHours() * 60 + now.getMinutes();
+  var turnoValido = null;
+  for(var i=0; i<turniOggi.length; i++) {
+    var t = turniOggi[i];
+    if(!t.oraInizio) continue;
+    var parti = t.oraInizio.split(":");
+    var minutiInizio = parseInt(parti[0]) * 60 + parseInt(parti[1]);
+    var diff = minutiAttuali - minutiInizio;
+    if(diff >= -30 && diff <= 30) {
+      turnoValido = t;
+      break;
+    }
+  }
+
+  if(!turnoValido) {
+    var turnoOggi = turniOggi[0];
+    S.timbraMsg = "❌ Fuori orario. Il tuo turno inizia alle " + turnoOggi.oraInizio + ". Puoi timbrare max 30 minuti prima o dopo.";
+    S.timbraMsgType = "err";
+    render();
+    return;
+  }
+
   if(!navigator.geolocation) {
     S.timbraMsg = "❌ Il GPS non è disponibile su questo dispositivo.";
     S.timbraMsgType = "err";
@@ -677,6 +712,7 @@ function doTimbraEntrata() {
       S.timbraLat = pos.coords.latitude;
       S.timbraLng = pos.coords.longitude;
       S.timbraStrutturaNome = strut.nome;
+      S.timbraTurno = turnoValido;
       S.timbraMsg = "✅ Entrata registrata alle " + ora + " — sei a " + Math.round(dist) + "m dalla struttura.";
       S.timbraMsgType = "ok";
       render();
@@ -731,6 +767,7 @@ function doTimbraUscita() {
           oraUscita: ora,
           oreTotali: oreTotali,
           stato: "Regolare",
+          turno: S.timbraTurno ? S.timbraTurno.tipo : "",
           lat: pos.coords.latitude,
           lng: pos.coords.longitude
         })
