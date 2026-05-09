@@ -147,6 +147,40 @@ var PRIVACY_URL = "https://hook.eu1.make.com/dmdvislgavso2dhh7ccp5iy4pa69vuox";
 var AZIONE_URL = "https://hook.eu1.make.com/6vp67eiqkpd861to9dqqolvfft62ahcq";
 var TIMBRA_URL = "https://hook.eu1.make.com/ovyaryk28yqdcl6q2a2v1sasxo5hktj1";
 var STRUTTURE_URL = "https://hook.eu1.make.com/xw0j4gjineix3dbogtdayeu0jm4tv6wq";
+var PROFILO_URL = "https://hook.eu1.make.com/kgiczfmj5o3hwogzwjeaoq0w2oyy10ue";
+
+var PROFILO_DIP = null;
+
+function fetchProfilo() {
+  fetch(PROFILO_URL, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({username: S.user.username})
+  })
+  .then(function(r){ return r.text(); })
+  .then(function(text){
+    try {
+      var data = JSON.parse(text);
+      var p = (data && data.properties_value) ? data.properties_value : data;
+      var nome = "";
+      if(p.Nome && Array.isArray(p.Nome) && p.Nome[0]) nome = p.Nome[0].plain_text || p.Nome[0].text && p.Nome[0].text.content || "";
+      else if(typeof p.Nome === "string") nome = p.Nome;
+      var cognome = typeof p.Cognome === "string" ? p.Cognome : (p.Cognome && p.Cognome[0] ? p.Cognome[0].plain_text || "" : "");
+      var email = p.Email || "";
+      var telefono = p.Telefono || "";
+      var mansione = (p.Mansione && p.Mansione.name) ? p.Mansione.name : "";
+      var contratto = (p["Tipo contratto"] && p["Tipo contratto"].name) ? p["Tipo contratto"].name : "";
+      var struttura = typeof p["Struttura principale"] === "string" ? p["Struttura principale"] : "";
+      var cf = typeof p["Codice fiscale"] === "string" ? p["Codice fiscale"] : "";
+      var nascita = (p["Data di nascita"] && p["Data di nascita"].start) ? p["Data di nascita"].start.split("T")[0] : "";
+      PROFILO_DIP = {nome:nome, cognome:cognome, email:email, telefono:telefono, mansione:mansione, contratto:contratto, struttura:struttura, cf:cf, nascita:nascita};
+      render();
+    } catch(e) {
+      console.log("Errore fetch profilo:", e);
+    }
+  })
+  .catch(function(e){ console.log("Errore fetch profilo:", e); });
+}
 var TURNI_URL = "https://hook.eu1.make.com/asyef6nu2ll64d3u7ed5qdjpk4w9aneh";
 var TIMBRATURE_READ_URL = "https://hook.eu1.make.com/jsjc97nwzuleo7tjo9k37oejuptyhbbh";
 
@@ -386,7 +420,7 @@ function doLogin() {
       S.loggedIn = true;
       S.user = {nome:res.nome, ruolo:res.ruolo||"Utente", username:uname};
       if(isAdmin()) { fetchPosts(); fetchIncaricati(); }
-      if(isDipendente()) { fetchStrutture(); fetchTurni(); fetchTimbrature(); }
+      if(isDipendente()) { fetchStrutture(); fetchTurni(); fetchTimbrature(); fetchProfilo(); }
       render();
     } else {
       err.textContent = "Credenziali non valide. Riprova.";
@@ -835,20 +869,37 @@ function renderDipTurni() {
 
 function renderDipProfilo() {
   var u = S.user;
+  var p = PROFILO_DIP;
   var h = "";
-  h += "<div class=\"stat-card\"><div class=\"stat-card-orb\"></div>";
-  h += "<div class=\"stat-label\">Nome completo</div>";
-  h += "<div style='font-size:26px;font-weight:900;color:white'>" + u.nome + "</div>";
-  h += "<div class=\"stat-sub\">" + (u.ruolo||"Dipendente") + "</div>";
+
+  // Card header con nome
+  h += "<div class='stat-card'><div class='stat-card-orb'></div>";
+  h += "<div class='stat-label'>Nome completo</div>";
+  h += "<div style='font-size:26px;font-weight:900;color:white'>" + (p ? p.nome + " " + p.cognome : u.nome) + "</div>";
+  h += "<div class='stat-sub'>" + (p && p.mansione ? p.mansione : u.ruolo||"Dipendente") + "</div>";
   h += "</div>";
-  h += "<div class=\"ana-card\">";
-  h += "<div class=\"ana-row\"><div class=\"ana-label\">Mansione</div><div class=\"ana-value\">—</div></div>";
-  h += "<div class=\"ana-row\"><div class=\"ana-label\">Struttura</div><div class=\"ana-value\">—</div></div>";
-  h += "<div class=\"ana-row\"><div class=\"ana-label\">Tipo contratto</div><div class=\"ana-value\">—</div></div>";
-  h += "<div class=\"ana-row\"><div class=\"ana-label\">Email</div><div class=\"ana-value\">—</div></div>";
-  h += "<div class=\"ana-row\"><div class=\"ana-label\">Telefono</div><div class=\"ana-value\">—</div></div>";
-  h += "</div>";
-  h += "<div style='font-size:12px;color:var(--text-light);font-weight:600;text-align:center;padding:0.5rem 0'>I dati completi saranno disponibili presto.</div>";
+
+  if(!p) {
+    h += "<div class='timbra-card'><div style='text-align:center;padding:1rem;color:var(--text-light);font-weight:700'>Caricamento profilo...</div></div>";
+  } else {
+    h += "<div class='ana-card'>";
+    h += "<div class='ana-row'><div class='ana-label'>Mansione</div><div class='ana-value'>" + (p.mansione||"—") + "</div></div>";
+    h += "<div class='ana-row'><div class='ana-label'>Tipo contratto</div><div class='ana-value'>" + (p.contratto||"—") + "</div></div>";
+    h += "<div class='ana-row'><div class='ana-label'>Struttura</div><div class='ana-value'>" + (p.struttura||"—") + "</div></div>";
+    h += "</div>";
+
+    h += "<div class='ana-card'>";
+    h += "<div class='ana-row'><div class='ana-label'>Email</div><div class='ana-value' style='font-size:12px'>" + (p.email||"—") + "</div></div>";
+    h += "<div class='ana-row'><div class='ana-label'>Telefono</div><div class='ana-value'>" + (p.telefono||"—") + "</div></div>";
+    h += "</div>";
+
+    h += "<div class='ana-card'>";
+    h += "<div class='ana-row'><div class='ana-label'>Codice fiscale</div><div class='ana-value' style='font-size:12px'>" + (p.cf||"—") + "</div></div>";
+    h += "<div class='ana-row'><div class='ana-label'>Data di nascita</div><div class='ana-value'>" + (p.nascita ? fmtDateIt(p.nascita) : "—") + "</div></div>";
+    h += "</div>";
+  }
+
+  h += "<button class='update-btn' onclick=\"fetchProfilo()\">Aggiorna</button>";
   return h;
 }
 
