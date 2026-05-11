@@ -223,7 +223,8 @@ function fetchTimbrature() {
         var oreTotali = p["Ore totali"] || 0;
         // Stato
         var stato = (p.Stato && p.Stato.name) ? p.Stato.name : "";
-        return {struttura:struttura, dipendente:dipendente, data:data2, oraEntrata:oraEntrata, oraUscita:oraUscita, oreTotali:parseFloat(oreTotali)||0, stato:stato};
+        var approvazione = (p.Approvazione && p.Approvazione.name) ? p.Approvazione.name : "Regolare";
+        return {struttura:struttura, dipendente:dipendente, data:data2, oraEntrata:oraEntrata, oraUscita:oraUscita, oreTotali:parseFloat(oreTotali)||0, stato:stato, approvazione:approvazione};
       }).filter(function(t){ return t.data; });
       render();
     } catch(e) {
@@ -662,10 +663,16 @@ function renderDipTimbra() {
   } else {
     for(var j=0; j<ultime.length; j++) {
       var tb = ultime[j];
+      var appBg = tb.approvazione==="Regolare"?"#D5F0E0":tb.approvazione==="Approvato"?"#D5F0E0":tb.approvazione==="Non approvato"?"#FCE4E4":"#FEF3CD";
+      var appCol = tb.approvazione==="Regolare"?"#1A6B3A":tb.approvazione==="Approvato"?"#1A6B3A":tb.approvazione==="Non approvato"?"#7A1A1A":"#7A5800";
+      var appLabel = tb.approvazione==="Necessaria approvazione"?"⏳ In attesa di approvazione":tb.approvazione==="Approvato"?"✅ Turno non previsto approvato":tb.approvazione==="Non approvato"?"❌ Non approvato":"✅ Regolare";
       h += "<div class='ana-row'>";
-      h += "<div><div class='ana-label'>" + fmtDateIt(tb.data) + " · " + tb.struttura + "</div>";
-      h += "<div style='font-size:13px;font-weight:700;color:var(--teal)'>🕐 " + (tb.oraEntrata||"—") + " → " + (tb.oraUscita||"—") + "</div></div>";
-      h += "<div style='font-size:14px;font-weight:900;color:var(--teal-dark)'>" + (tb.oreTotali > 0 ? tb.oreTotali.toFixed(2)+"h" : "—") + "</div>";
+      h += "<div style='flex:1'>";
+      h += "<div class='ana-label'>" + fmtDateIt(tb.data) + " · " + (tb.struttura||"—") + "</div>";
+      h += "<div style='font-size:13px;font-weight:700;color:var(--teal)'>🕐 " + (tb.oraEntrata||"—") + " → " + (tb.oraUscita||"—") + "</div>";
+      h += "<div style='margin-top:4px;display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:800;background:" + appBg + ";color:" + appCol + "'>" + appLabel + "</div>";
+      h += "</div>";
+      h += "<div style='font-size:14px;font-weight:900;color:var(--teal-dark);margin-left:8px'>" + (tb.oreTotali > 0 ? tb.oreTotali.toFixed(2)+"h" : "—") + "</div>";
       h += "</div>";
     }
   }
@@ -689,35 +696,32 @@ function doTimbraEntrata() {
   var now = new Date();
   var oggi = now.toISOString().split("T")[0];
   var turniOggi = TURNI_DIP.filter(function(t){ return t.data === oggi; });
-
-  if(turniOggi.length === 0) {
-    S.timbraMsg = "❌ Nessun turno previsto oggi. Timbratura non autorizzata.";
-    S.timbraMsgType = "err";
-    render();
-    return;
-  }
-
-  // Controlla se l'orario attuale è entro 30 min dall'inizio di un turno
   var minutiAttuali = now.getHours() * 60 + now.getMinutes();
   var turnoValido = null;
-  for(var i=0; i<turniOggi.length; i++) {
-    var t = turniOggi[i];
-    if(!t.oraInizio) continue;
-    var parti = t.oraInizio.split(":");
-    var minutiInizio = parseInt(parti[0]) * 60 + parseInt(parti[1]);
-    var diff = minutiAttuali - minutiInizio;
-    if(diff >= -30 && diff <= 30) {
-      turnoValido = t;
-      break;
+  var fuoriTurno = false;
+
+  if(turniOggi.length > 0) {
+    for(var i=0; i<turniOggi.length; i++) {
+      var t = turniOggi[i];
+      if(!t.oraInizio) continue;
+      var parti = t.oraInizio.split(":");
+      var minutiInizio = parseInt(parti[0]) * 60 + parseInt(parti[1]);
+      var diff = minutiAttuali - minutiInizio;
+      if(diff >= -30 && diff <= 30) { turnoValido = t; break; }
     }
+    if(!turnoValido) fuoriTurno = true;
+  } else {
+    fuoriTurno = true;
   }
 
-  if(!turnoValido) {
-    var turnoOggi = turniOggi[0];
-    S.timbraMsg = "❌ Fuori orario. Il tuo turno inizia alle " + turnoOggi.oraInizio + ". Puoi timbrare max 30 minuti prima o dopo.";
-    S.timbraMsgType = "err";
-    render();
-    return;
+  // Se fuori turno mostra disclaimer ma permette di procedere
+  if(fuoriTurno) {
+    S.timbraFuoriTurno = true;
+    S.timbraMsg = "⚠️ Attenzione: stai timbrando fuori dal tuo turno previsto. Il turno dovrà essere approvato dall'ufficio personale.";
+    S.timbraMsgType = "warn";
+  } else {
+    S.timbraFuoriTurno = false;
+    S.timbraTurno = turnoValido;
   }
 
   if(!navigator.geolocation) {
@@ -801,7 +805,8 @@ function doTimbraUscita() {
           oraEntrata: S.timbratoEntrata,
           oraUscita: ora,
           oreTotali: oreTotali,
-          stato: "Regolare",
+          stato: S.timbraFuoriTurno ? "Fuori turno" : "Regolare",
+          approvazione: S.timbraFuoriTurno ? "Necessaria approvazione" : "Regolare",
           turno: S.timbraTurno ? S.timbraTurno.tipo : "",
           lat: pos.coords.latitude,
           lng: pos.coords.longitude
