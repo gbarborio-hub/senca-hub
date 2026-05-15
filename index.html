@@ -185,6 +185,88 @@ function fetchProfilo() {
 var TURNI_URL = "https://hook.eu1.make.com/asyef6nu2ll64d3u7ed5qdjpk4w9aneh";
 var CICLO_URL = "https://hook.eu1.make.com/amh2svifhurdxby9dc2b9fms2fnk9f6x";
 var CONTATTI_URL = "https://hook.eu1.make.com/3pkwi2nqujb04dfklwql6tpa52fxq4rj";
+var FERIE_SALDO_URL = "https://hook.eu1.make.com/vltcargb3vtf232f931qb7jm22wij60w";
+var FERIE_RICHIESTA_URL = "https://hook.eu1.make.com/d7wyto8t21pfk7xq0tjunk6n7e8s9stj";
+var FERIE_LETTURA_URL = "https://hook.eu1.make.com/tf7e3oqhvhdudtgdzja5l9qy86yesbur";
+
+var FERIE_SALDO = null;
+var FERIE_RICHIESTE = [];
+
+function fetchFerieSaldo() {
+  fetch(FERIE_SALDO_URL, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({username: S.user.username})
+  })
+  .then(function(r){ return r.text(); })
+  .then(function(text){
+    try {
+      var data = JSON.parse(text);
+      var p = (data && data.properties_value) ? data.properties_value : data;
+      FERIE_SALDO = {
+        ferieMaturate: p["Ferie maturate"] || 0,
+        ferieGodute: p["Ferie godute"] || 0,
+        ferieResidue: p["Ferie residue"] || 0,
+        rolMaturate: p["ROL maturate"] || 0,
+        rolGodute: p["ROL godute"] || 0,
+        rolResidue: p["ROL residue"] || 0,
+        tipoContratto: (p["Tipo contratto"] && p["Tipo contratto"].name) ? p["Tipo contratto"].name : ""
+      };
+      render();
+    } catch(e) { console.log("Errore fetch ferie saldo:", e); }
+  })
+  .catch(function(e){ console.log("Errore fetch ferie saldo:", e); });
+}
+
+function fetchFerieRichieste() {
+  fetch(FERIE_LETTURA_URL, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({username: S.user.username})
+  })
+  .then(function(r){ return r.text(); })
+  .then(function(text){
+    try {
+      var data = JSON.parse(text);
+      var raw = Array.isArray(data) ? data : [data];
+      FERIE_RICHIESTE = raw.map(function(item) {
+        var p = (item && item.properties_value) ? item.properties_value : item;
+        var tipo = (p.Tipo && p.Tipo.name) ? p.Tipo.name : "";
+        var stato = (p.Stato && p.Stato.name) ? p.Stato.name : "";
+        var dataInizio = (p["Data inizio"] && p["Data inizio"].start) ? p["Data inizio"].start.split("T")[0] : "";
+        var dataFine = (p["Data fine"] && p["Data fine"].start) ? p["Data fine"].start.split("T")[0] : "";
+        var oreRichieste = p["Ore richieste"] || 0;
+        var noteAdmin = typeof p["Note admin"] === "string" ? p["Note admin"] : "";
+        return {tipo:tipo, stato:stato, dataInizio:dataInizio, dataFine:dataFine, oreRichieste:oreRichieste, noteAdmin:noteAdmin};
+      }).filter(function(r){ return r.tipo; })
+        .sort(function(a,b){ return a.dataInizio > b.dataInizio ? -1 : 1; });
+      render();
+    } catch(e) { console.log("Errore fetch ferie richieste:", e); }
+  })
+  .catch(function(e){ console.log("Errore fetch ferie richieste:", e); });
+}
+
+function inviaRichiestaFerie(tipo, dataInizio, dataFine, oreRichieste, note) {
+  fetch(FERIE_RICHIESTA_URL, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      dipendente: S.user.nome,
+      username: S.user.username,
+      tipo: tipo,
+      dataInizio: dataInizio,
+      dataFine: dataFine,
+      oreRichieste: oreRichieste,
+      note: note || ""
+    })
+  })
+  .then(function(){ 
+    S.ferieForm = null;
+    fetchFerieRichieste();
+    alert("Richiesta inviata con successo!");
+  })
+  .catch(function(){ alert("Errore nell'invio. Riprova."); });
+}
 
 var CONTATTI = [];
 
@@ -457,7 +539,7 @@ function doLogin() {
       S.loggedIn = true;
       S.user = {nome:res.nome, ruolo:res.ruolo||"Utente", username:uname};
       if(isAdmin()) { fetchPosts(); fetchIncaricati(); }
-      if(isDipendente()) { fetchStrutture(); fetchTurni(); fetchTimbrature(); fetchProfilo(); fetchContatti(); }
+      if(isDipendente()) { fetchStrutture(); fetchTurni(); fetchTimbrature(); fetchProfilo(); fetchContatti(); fetchFerieSaldo(); fetchFerieRichieste(); }
       render();
     } else {
       err.textContent = "Credenziali non valide. Riprova.";
@@ -604,26 +686,79 @@ function renderDipHome() {
 
 function renderDipFerie() {
   var h = "";
-  h += "<div class=\"dip-half-cards\">";
-  h += "<div class=\"dip-half-card\" style='background:var(--teal-dark);min-height:130px'>";
-  h += "<div class=\"dip-half-orb\"></div>";
-  h += "<div class=\"dip-half-value\" style='font-size:42px'>5</div>";
-  h += "<div class=\"dip-half-label\">Ferie residue</div>";
+  var s = FERIE_SALDO;
+
+  h += "<div class='dip-half-cards'>";
+  h += "<div class='dip-half-card' style='background:var(--teal-dark);min-height:130px'>";
+  h += "<div class='dip-half-orb'></div>";
+  h += "<div class='dip-half-value' style='font-size:38px'>" + (s ? s.ferieResidue : "—") + "</div>";
+  h += "<div class='dip-half-label'>Ferie residue (ore)</div>";
   h += "</div>";
-  h += "<div class=\"dip-half-card\" style='background:var(--teal);min-height:130px'>";
-  h += "<div class=\"dip-half-orb\"></div>";
-  h += "<div class=\"dip-half-value\" style='font-size:42px'>20</div>";
-  h += "<div class=\"dip-half-label\">Goduto</div>";
+  h += "<div class='dip-half-card' style='background:var(--teal);min-height:130px'>";
+  h += "<div class='dip-half-orb'></div>";
+  h += "<div class='dip-half-value' style='font-size:38px'>" + (s ? s.rolResidue : "—") + "</div>";
+  h += "<div class='dip-half-label'>ROL residue (ore)</div>";
   h += "</div>";
   h += "</div>";
 
-  h += "<div class=\"timbra-card-big\" style='background:var(--cyan);min-height:100px'>";
-  h += "<div class=\"timbra-card-big-orb\"></div>";
-  h += "<div class=\"timbra-card-big-title\" style='font-size:28px'>Nuova richiesta</div>";
-  h += "<div class=\"timbra-card-big-sub\">Ferie o ROL</div>";
-  h += "</div>";
+  if(s) {
+    h += "<div class='ana-card' style='margin-bottom:0.75rem'>";
+    h += "<div class='ana-row'><div class='ana-label'>Ferie maturate</div><div class='ana-value'>" + s.ferieMaturate + "h</div></div>";
+    h += "<div class='ana-row'><div class='ana-label'>Ferie godute</div><div class='ana-value'>" + s.ferieGodute + "h</div></div>";
+    h += "<div class='ana-row'><div class='ana-label'>ROL maturate</div><div class='ana-value'>" + s.rolMaturate + "h</div></div>";
+    h += "<div class='ana-row'><div class='ana-label'>ROL godute</div><div class='ana-value'>" + s.rolGodute + "h</div></div>";
+    h += "</div>";
+  }
 
-  h += "<button class=\"update-btn\" onclick=\"render()\">Aggiornamenti</button>";
+  if(S.ferieForm) {
+    h += "<div class='timbra-card'>";
+    h += "<div class='timbra-title'>Nuova richiesta " + S.ferieForm + "</div>";
+    h += "<label class='field-label'>Data inizio</label>";
+    h += "<input type='date' id='ferie-inizio' class='struttura-select' style='margin-bottom:0.75rem'/>";
+    h += "<label class='field-label'>Data fine</label>";
+    h += "<input type='date' id='ferie-fine' class='struttura-select' style='margin-bottom:0.75rem'/>";
+    h += "<label class='field-label'>Ore richieste</label>";
+    h += "<input type='number' id='ferie-ore' class='struttura-select' placeholder='Es: 8' style='margin-bottom:0.75rem'/>";
+    h += "<label class='field-label'>Note (opzionale)</label>";
+    h += "<input type='text' id='ferie-note' class='struttura-select' placeholder='Motivazione...' style='margin-bottom:1rem'/>";
+    h += "<button class='timbra-btn entrata' onclick=\"inviaRichiestaFerie(S.ferieForm, document.getElementById('ferie-inizio').value, document.getElementById('ferie-fine').value, document.getElementById('ferie-ore').value, document.getElementById('ferie-note').value)\">📤 Invia richiesta</button>";
+    h += "<button class='timbra-btn uscita' style='margin-top:0.5rem' onclick=\"S.ferieForm=null;render()\">Annulla</button>";
+    h += "</div>";
+  } else {
+    h += "<div class='dip-half-cards'>";
+    h += "<div class='dip-half-card' style='background:var(--cyan);cursor:pointer' onclick=\"S.ferieForm='Ferie';render()\">";
+    h += "<div class='dip-half-orb'></div>";
+    h += "<div class='dip-half-label'>Nuova richiesta</div>";
+    h += "<div class='dip-half-value' style='font-size:22px'>Ferie</div>";
+    h += "</div>";
+    h += "<div class='dip-half-card' style='background:var(--coral);cursor:pointer' onclick=\"S.ferieForm='ROL';render()\">";
+    h += "<div class='dip-half-orb'></div>";
+    h += "<div class='dip-half-label'>Nuova richiesta</div>";
+    h += "<div class='dip-half-value' style='font-size:22px'>ROL</div>";
+    h += "</div>";
+    h += "</div>";
+  }
+
+  if(FERIE_RICHIESTE.length > 0) {
+    h += "<div class='section-label'><div class='section-title'>Storico richieste</div></div>";
+    h += "<div class='ana-card'>";
+    for(var i=0; i<FERIE_RICHIESTE.length; i++) {
+      var r = FERIE_RICHIESTE[i];
+      var statoBg = r.stato==="Approvata"?"#D5F0E0":r.stato==="Rifiutata"?"#FCE4E4":"#FEF3CD";
+      var statoCol = r.stato==="Approvata"?"#1A6B3A":r.stato==="Rifiutata"?"#7A1A1A":"#7A5800";
+      h += "<div style='padding:1rem;border-bottom:1px solid var(--bg)'>";
+      h += "<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:4px'>";
+      h += "<div style='font-size:14px;font-weight:800;color:var(--text-dark)'>" + r.tipo + " · " + r.oreRichieste + "h</div>";
+      h += "<div style='padding:2px 10px;border-radius:10px;font-size:10px;font-weight:800;background:" + statoBg + ";color:" + statoCol + "'>" + r.stato + "</div>";
+      h += "</div>";
+      h += "<div style='font-size:12px;color:var(--text-light);font-weight:600'>" + fmtDateIt(r.dataInizio) + (r.dataFine && r.dataFine!==r.dataInizio ? " → " + fmtDateIt(r.dataFine) : "") + "</div>";
+      if(r.noteAdmin) h += "<div style='font-size:12px;color:var(--teal);font-weight:600;margin-top:4px'>📝 " + r.noteAdmin + "</div>";
+      h += "</div>";
+    }
+    h += "</div>";
+  }
+
+  h += "<button class='update-btn' onclick=\"fetchFerieSaldo();fetchFerieRichieste()\">Aggiorna</button>";
   return h;
 }
 
