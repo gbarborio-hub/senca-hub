@@ -190,6 +190,7 @@ function fetchProfilo() {
 var TURNI_URL = "https://hook.eu1.make.com/asyef6nu2ll64d3u7ed5qdjpk4w9aneh";
 var CICLO_URL = "https://hook.eu1.make.com/amh2svifhurdxby9dc2b9fms2fnk9f6x";
 var CONTATTI_URL = "https://hook.eu1.make.com/3pkwi2nqujb04dfklwql6tpa52fxq4rj";
+var SEGNALAZIONE_URL = "https://hook.eu1.make.com/nysboebghlz1hvdwt6g5oi8rt6vfne5d";
 var FERIE_SALDO_URL = "https://hook.eu1.make.com/vltcargb3vtf232f931qb7jm22wij60w";
 var FERIE_RICHIESTA_URL = "https://hook.eu1.make.com/d7wyto8t21pfk7xq0tjunk6n7e8s9stj";
 var FERIE_LETTURA_URL = "https://hook.eu1.make.com/tf7e3oqhvhdudtgdzja5l9qy86yesbur";
@@ -601,17 +602,23 @@ function renderDipendente() {
   h += "<div class=\"app-greeting\">Buongiorno,<br>" + (u.nome ? u.nome.split(" ")[0] : "utente") + "</div>";
   h += "<div style='display:flex;align-items:center;gap:0.5rem'>";
   if(u.mansione) h += "<div style='font-size:12px;font-weight:700;color:var(--teal)'>" + u.mansione + "</div>";
-  h += "<div class=\"app-logo\">" + LOGO_IMG + "</div>";
+  h += "<div class=\"app-logo\" style='cursor:pointer' onclick=\"S.dipTab='Contatti';render()\" title='Contatti utili'>" + LOGO_IMG + "</div>";
   h += "</div></div>";
 
-  // Tab nav dipendente
-  h += "<div style='padding:0 1rem'><div class=\"nav-tabs\">";
-  var tabs = ["Home","Ferie/ROL","Informazioni","Contatti"];
-  for(var t=0; t<tabs.length; t++) {
-    var tact = (S.dipTab===tabs[t]||(t===0&&!S.dipTab)) ? "active" : "inactive";
-    h += "<div class=\"nav-tab " + tact + "\" onclick=\"S.dipTab='" + tabs[t] + "';render()\">" + tabs[t] + "</div>";
+  // Tab nav dipendente — nascondi se in Contatti
+  if(tab !== "Contatti") {
+    h += "<div style='padding:0 1rem'><div class=\"nav-tabs\">";
+    var tabs = ["Home","Ferie/ROL","Informazioni"];
+    for(var t=0; t<tabs.length; t++) {
+      var tact = (S.dipTab===tabs[t]||(t===0&&!S.dipTab)) ? "active" : "inactive";
+      h += "<div class=\"nav-tab " + tact + "\" onclick=\"S.dipTab='" + tabs[t] + "';render()\">" + tabs[t] + "</div>";
+    }
+    h += "</div></div>";
+  } else {
+    h += "<div style='padding:0.5rem 1rem'>";
+    h += "<button onclick=\"S.dipTab='Home';render()\" style='background:none;border:none;font-size:14px;font-weight:800;color:var(--teal);cursor:pointer;font-family:Satoshi,sans-serif'>← Torna alla home</button>";
+    h += "</div>";
   }
-  h += "</div></div>";
 
   h += "<div class=\"dip-content\">";
   var tab = S.dipTab || "Home";
@@ -619,6 +626,7 @@ function renderDipendente() {
   else if(tab === "Ferie/ROL") h += renderDipFerie();
   else if(tab === "Informazioni") h += renderDipInfo();
   else if(tab === "Contatti") h += renderDipContatti();
+  else if(tab === "segnalazione") h += renderDipSegnalazione();
   else if(tab === "timbra") h += renderDipTimbra();
   else if(tab === "turni") h += renderDipTurni();
   else if(tab === "profilo") h += renderDipProfilo();
@@ -667,6 +675,13 @@ function renderDipHome() {
   h += "<div class=\"dip-half-label\">Il mio</div>";
   h += "<div class=\"dip-half-value\">Profilo</div>";
   h += "</div>";
+  h += "</div>";
+
+  // Card segnalazione evento
+  h += "<div class=\"timbra-card-big\" style='background:var(--coral);min-height:90px;cursor:pointer' onclick=\"S.dipTab='segnalazione';render()\">";
+  h += "<div class=\"timbra-card-big-orb\"></div>";
+  h += "<div class=\"timbra-card-big-title\" style='font-size:22px'>⚠️ Segnala evento</div>";
+  h += "<div class=\"timbra-card-big-sub\">Incidente · Data breach</div>";
   h += "</div>";
 
   // Documenti caricati
@@ -1054,6 +1069,163 @@ function renderDipContatti() {
   });
 
   h += "<button class='update-btn' onclick=\"fetchContatti()\">Aggiorna</button>";
+  return h;
+}
+
+function renderDipTurni() {
+  if(S.loadingTurni) {
+    return "<div style='display:flex;align-items:center;justify-content:center;height:40vh;flex-direction:column;gap:1rem'><div class='spinner' style='width:32px;height:32px;border-width:3px'></div><div style='color:#7A9999;font-weight:700;font-size:14px'>Caricamento turni...</div></div>";
+  }
+  var h = "";
+  if(TURNI_DIP.length === 0) {
+    h += "<div class='timbra-card'><div style='text-align:center;padding:1rem;color:var(--text-light);font-weight:700'>Nessun turno trovato</div></div>";
+  } else {
+    var oggi = new Date().toISOString().split("T")[0];
+    var prossimo = TURNI_DIP.find(function(t){ return t.data >= oggi; });
+    if(prossimo) {
+      h += "<div class='stat-card' style='background:var(--coral)'><div class='stat-card-orb'></div>";
+      h += "<div class='stat-label'>Prossimo turno</div>";
+      h += "<div style='font-size:22px;font-weight:900;color:white'>" + fmtDateIt(prossimo.data) + " — " + prossimo.tipo + "</div>";
+      h += "<div class='stat-sub'>🕐 " + prossimo.oraInizio + " — " + prossimo.oraFine + " · " + prossimo.struttura + "</div>";
+      h += "</div>";
+    }
+    h += "<div class='section-label'><div class='section-title'>Tutti i turni</div></div>";
+    for(var i=0; i<TURNI_DIP.length; i++) {
+      var t = TURNI_DIP[i];
+      var isPassato = t.data < oggi;
+      h += "<div class='turno-card' style='opacity:" + (isPassato ? "0.6" : "1") + "'>";
+      h += "<div class='turno-data'>" + fmtDateIt(t.data) + "</div>";
+      h += "<div style='display:flex;align-items:center;justify-content:space-between'>";
+      h += "<div class='turno-tipo'>" + t.tipo + "</div>";
+      h += "<span class='turno-badge turno-" + t.tipo.toLowerCase() + "'>" + t.tipo + "</span>";
+      h += "</div>";
+      h += "<div class='turno-orari'>🕐 " + t.oraInizio + " — " + t.oraFine + "</div>";
+      h += "<div class='turno-struttura'>📍 " + t.struttura + "</div>";
+      h += "</div>";
+    }
+  }
+  h += "<button class='update-btn' onclick=\"S.loadingTurni=true;fetchTurni()\">Aggiorna</button>";
+  return h;
+}
+
+function inviaSegnalazione() {
+  var p = PROFILO_DIP || {};
+  var isDataBreach = document.getElementById("seg-databreach").value === "Sì";
+  var payload = {
+    numeroEvento: "AUTO-" + Date.now(),
+    dataEvento: document.getElementById("seg-dataevento").value,
+    nome: p.nome || S.user.nome,
+    cognome: p.cognome || "",
+    areaSede: document.getElementById("seg-areasede").value,
+    descrizione: document.getElementById("seg-descrizione").value,
+    tipoViolazione: document.getElementById("seg-tipoviolazione").value,
+    origineEvento: document.getElementById("seg-origine").value,
+    causaViolazione: document.getElementById("seg-causa").value,
+    testimoni: document.getElementById("seg-testimoni").value,
+    infoAziendali: document.getElementById("seg-infoaziendali").value,
+    infoAziendaliDettaglio: document.getElementById("seg-infodettaglio").value,
+    datiPersonali: document.getElementById("seg-datipersonali").value,
+    asset: document.getElementById("seg-asset").value,
+    responsabileAsset: document.getElementById("seg-responsabileasset").value,
+    misureSicurezza: document.getElementById("seg-misure").value,
+    isDataBreach: isDataBreach ? "Sì" : "No",
+    categoriaDataBreach: isDataBreach ? document.getElementById("seg-categoriadb").value : "",
+    categorieDati: isDataBreach ? document.getElementById("seg-categoriedati").value : "",
+    quantitaDati: isDataBreach ? document.getElementById("seg-quantita").value : "",
+    categorieInteressati: isDataBreach ? document.getElementById("seg-interessati").value : "",
+    danni: isDataBreach ? document.getElementById("seg-danni").value : ""
+  };
+
+  if(!payload.dataEvento || !payload.descrizione || !payload.tipoViolazione) {
+    alert("Compila almeno: data evento, descrizione e tipo di violazione.");
+    return;
+  }
+
+  var btn = document.getElementById("seg-submit");
+  btn.disabled = true;
+  btn.textContent = "Invio in corso...";
+
+  fetch(SEGNALAZIONE_URL, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(payload)
+  })
+  .then(function() {
+    S.segnalazioneInviata = true;
+    render();
+  })
+  .catch(function() {
+    btn.disabled = false;
+    btn.textContent = "📤 Invia segnalazione";
+    alert("Errore nell'invio. Riprova.");
+  });
+}
+
+function renderDipSegnalazione() {
+  if(S.segnalazioneInviata) {
+    var h = "";
+    h += "<div class='stat-card' style='background:var(--teal)'><div class='stat-card-orb'></div>";
+    h += "<div class='stat-label'>Segnalazione inviata</div>";
+    h += "<div style='font-size:28px;font-weight:900;color:white'>✅ Ricevuta</div>";
+    h += "<div class='stat-sub'>Il responsabile privacy è stato notificato. Conserva copia della segnalazione.</div>";
+    h += "</div>";
+    h += "<button class='update-btn' onclick=\"S.segnalazioneInviata=false;render()\">Nuova segnalazione</button>";
+    return h;
+  }
+
+  var p = PROFILO_DIP || {};
+  var h = "";
+
+  h += "<div class='timbra-card'>";
+  h += "<div style='background:#FCE4E4;border-radius:var(--radius-sm);padding:0.75rem;margin-bottom:1rem;font-size:13px;font-weight:700;color:#7A1A1A'>⚠️ Usa questo modulo per segnalare eventi, incidenti o data breach. La segnalazione sarà registrata nel sistema privacy aziendale.</div>";
+
+  // Sezione 1 — Dati segnalante
+  h += "<div style='font-size:15px;font-weight:900;color:var(--text-dark);margin-bottom:0.75rem'>Sezione 1 — Segnalazione evento</div>";
+  h += "<label class='field-label'>Data in cui si è verificato l'evento *</label>";
+  h += "<input type='date' id='seg-dataevento' class='struttura-select' style='margin-bottom:0.75rem'/>";
+  h += "<label class='field-label'>Area e sede</label>";
+  h += "<input type='text' id='seg-areasede' class='struttura-select' placeholder='" + (p.struttura||"Es: Struttura 1") + "' style='margin-bottom:0.75rem'/>";
+  h += "<label class='field-label'>Descrizione dell'evento *</label>";
+  h += "<textarea id='seg-descrizione' class='struttura-select' rows='4' placeholder='Descrivi dettagliatamente l\\'evento, includendo documenti/dati coinvolti...' style='margin-bottom:0.75rem;resize:none;height:100px'></textarea>";
+  h += "<label class='field-label'>Tipo di violazione *</label>";
+  h += "<input type='text' id='seg-tipoviolazione' class='struttura-select' placeholder='Es: accesso non autorizzato, perdita dati...' style='margin-bottom:0.75rem'/>";
+  h += "<label class='field-label'>Origine dell'evento</label>";
+  h += "<select id='seg-origine' class='struttura-select' style='margin-bottom:0.75rem'><option value=''>-- Seleziona --</option><option>Interna</option><option>Esterna</option></select>";
+  h += "<label class='field-label'>Causa della violazione</label>";
+  h += "<select id='seg-causa' class='struttura-select' style='margin-bottom:0.75rem'><option value=''>-- Seleziona --</option><option>Azione intenzionale</option><option>Azione accidentale</option><option>Sconosciuta</option><option>Altro</option></select>";
+  h += "<label class='field-label'>Soggetti testimoni</label>";
+  h += "<input type='text' id='seg-testimoni' class='struttura-select' placeholder='Nessuno / Segnalante / Altri...' style='margin-bottom:0.75rem'/>";
+  h += "<label class='field-label'>Informazioni aziendali coinvolte</label>";
+  h += "<select id='seg-infoaziendali' class='struttura-select' style='margin-bottom:0.5rem'><option value='No'>No</option><option value='Sì'>Sì</option></select>";
+  h += "<input type='text' id='seg-infodettaglio' class='struttura-select' placeholder='Se sì, specificare quali...' style='margin-bottom:0.75rem'/>";
+  h += "<label class='field-label'>Dati personali coinvolti</label>";
+  h += "<select id='seg-datipersonali' class='struttura-select' style='margin-bottom:0.75rem'><option value='No'>No</option><option value='Sì'>Sì</option></select>";
+  h += "<label class='field-label'>Soggetti, risorse e asset coinvolti</label>";
+  h += "<input type='text' id='seg-asset' class='struttura-select' placeholder='Es: PC, cartelle, sistemi IT...' style='margin-bottom:0.75rem'/>";
+  h += "<label class='field-label'>Responsabile degli asset coinvolti</label>";
+  h += "<input type='text' id='seg-responsabileasset' class='struttura-select' placeholder='Nome responsabile...' style='margin-bottom:0.75rem'/>";
+  h += "<label class='field-label'>Misure di sicurezza esistenti</label>";
+  h += "<input type='text' id='seg-misure' class='struttura-select' placeholder='Se note...' style='margin-bottom:1rem'/>";
+
+  // Sezione Data Breach
+  h += "<div style='font-size:15px;font-weight:900;color:var(--text-dark);margin-bottom:0.5rem'>Sezione Data Breach</div>";
+  h += "<div style='font-size:12px;color:var(--text-light);font-weight:600;margin-bottom:0.75rem'>Compila solo se l'evento ha coinvolto dati personali</div>";
+  h += "<label class='field-label'>È un data breach?</label>";
+  h += "<select id='seg-databreach' class='struttura-select' style='margin-bottom:0.75rem'><option value='No'>No</option><option value='Sì'>Sì</option></select>";
+  h += "<label class='field-label'>Categoria data breach</label>";
+  h += "<select id='seg-categoriadb' class='struttura-select' style='margin-bottom:0.75rem'><option value=''>-- Seleziona --</option><option>Confidentiality breach</option><option>Availability breach</option><option>Integrity breach</option></select>";
+  h += "<label class='field-label'>Categorie di dati personali coinvolti</label>";
+  h += "<input type='text' id='seg-categoriedati' class='struttura-select' placeholder='Es: anagrafici, sanitari, contatti...' style='margin-bottom:0.75rem'/>";
+  h += "<label class='field-label'>Quantità di dati coinvolti</label>";
+  h += "<input type='text' id='seg-quantita' class='struttura-select' placeholder='Se nota...' style='margin-bottom:0.75rem'/>";
+  h += "<label class='field-label'>Categorie di interessati coinvolti</label>";
+  h += "<input type='text' id='seg-interessati' class='struttura-select' placeholder='Es: pazienti, dipendenti...' style='margin-bottom:0.75rem'/>";
+  h += "<label class='field-label'>Danni causati agli interessati</label>";
+  h += "<input type='text' id='seg-danni' class='struttura-select' placeholder='Se noti...' style='margin-bottom:1rem'/>";
+
+  h += "<button id='seg-submit' class='timbra-btn entrata' onclick='inviaSegnalazione()'>📤 Invia segnalazione</button>";
+  h += "<button class='timbra-btn uscita' style='margin-top:0.5rem' onclick=\"S.dipTab='Home';render()\">Annulla</button>";
+  h += "</div>";
   return h;
 }
 
