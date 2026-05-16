@@ -154,7 +154,7 @@ var PROFILO_URL = API_BASE + "/api/profilo";
 var PROFILO_DIP = null;
 
 function fetchProfilo() {
-  fetch(PROFILO_URL, {
+  apiFetch(PROFILO_URL, {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify({username: S.user.username})
@@ -199,7 +199,7 @@ var FERIE_SALDO = null;
 var FERIE_RICHIESTE = [];
 
 function fetchFerieSaldo() {
-  fetch(FERIE_SALDO_URL, {
+  apiFetch(FERIE_SALDO_URL, {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify({username: S.user.username})
@@ -225,7 +225,7 @@ function fetchFerieSaldo() {
 }
 
 function fetchFerieRichieste() {
-  fetch(FERIE_LETTURA_URL, {
+  apiFetch(FERIE_LETTURA_URL, {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify({username: S.user.username})
@@ -253,7 +253,7 @@ function fetchFerieRichieste() {
 }
 
 function inviaRichiestaFerie(tipo, dataInizio, dataFine, oreRichieste, note) {
-  fetch(FERIE_RICHIESTA_URL, {
+  apiFetch(FERIE_RICHIESTA_URL, {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify({
@@ -277,7 +277,7 @@ function inviaRichiestaFerie(tipo, dataInizio, dataFine, oreRichieste, note) {
 var CONTATTI = [];
 
 function fetchContatti() {
-  fetch(CONTATTI_URL, {
+  apiFetch(CONTATTI_URL, {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify({action:"get_contatti"})
@@ -311,7 +311,7 @@ var TIMBRATURE_READ_URL = API_BASE + "/api/timbrature";
 var TIMBRATURE_DIP = [];
 
 function fetchTimbrature() {
-  fetch(TIMBRATURE_READ_URL, {
+  apiFetch(TIMBRATURE_READ_URL, {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify({nome: S.user.nome})
@@ -396,7 +396,7 @@ var INCARICATI = [];
 var TURNI_DIP = [];
 
 function fetchTurni() {
-  fetch(TURNI_URL, {
+  apiFetch(TURNI_URL, {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify({nome: S.user.nome})
@@ -438,7 +438,7 @@ function fetchTurni() {
 var STRUTTURE = [];
 
 function fetchStrutture() {
-  fetch(STRUTTURE_URL, {
+  apiFetch(STRUTTURE_URL, {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify({action:"get_strutture"})
@@ -530,11 +530,24 @@ function distanzaMetri(lat1, lng1, lat2, lng2) {
 
 // ===== LOGIN =====
 function getAuthHeaders() {
-  var token = S.token || "";
   return {
     "Content-Type": "application/json",
-    "Authorization": "Bearer " + token
+    "Authorization": "Bearer " + (S.token || "")
   };
+}
+
+function apiFetch(url, bodyOrOptions) {
+  var body = bodyOrOptions;
+  // Se viene passato un oggetto fetch options, estrai il body
+  if(bodyOrOptions && bodyOrOptions.body) {
+    try { body = JSON.parse(bodyOrOptions.body); } catch(e) { body = {}; }
+  }
+  var payload = Object.assign({}, body, {_token: S.token || ""});
+  return fetch(url, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload)
+  });
 }
 
 function doLogin() {
@@ -980,7 +993,7 @@ function doTimbraUscita() {
       S.timbraMsgType = "warn";
       render();
 
-      fetch(TIMBRA_URL, {
+      apiFetch(TIMBRA_URL, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify({
