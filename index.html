@@ -191,6 +191,107 @@ var TURNI_URL = "https://hook.eu1.make.com/asyef6nu2ll64d3u7ed5qdjpk4w9aneh";
 var CICLO_URL = "https://hook.eu1.make.com/amh2svifhurdxby9dc2b9fms2fnk9f6x";
 var CONTATTI_URL = "https://hook.eu1.make.com/3pkwi2nqujb04dfklwql6tpa52fxq4rj";
 var SEGNALAZIONE_URL = "https://hook.eu1.make.com/nysboebghlz1hvdwt6g5oi8rt6vfne5d";
+
+// ===== GESTIONE PERSONALE =====
+var GP_DIPENDENTI = [];
+var GP_TIMBRATURE = [];
+var GP_FERIE_RICHIESTE = [];
+var GP_VIEW = "dipendenti";
+var GP_DIP_DETAIL = null;
+
+function fetchDipendentiGP() {
+  fetch(PRIVACY_URL, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({action:"get_dipendenti_gp"})
+  })
+  .then(function(r){ return r.text(); })
+  .then(function(text){
+    try {
+      var data = JSON.parse(text);
+      var raw = Array.isArray(data) ? data : [data];
+      GP_DIPENDENTI = raw.map(function(item) {
+        var p = (item && item.properties_value) ? item.properties_value : item;
+        var nome = "";
+        if(p.Nome && Array.isArray(p.Nome) && p.Nome[0]) nome = p.Nome[0].plain_text || p.Nome[0].text && p.Nome[0].text.content || "";
+        var cognome = typeof p.Cognome === "string" ? p.Cognome : (p.Cognome && p.Cognome[0] ? p.Cognome[0].plain_text || "" : "");
+        var email = p.Email || "";
+        var telefono = p.Telefono || "";
+        var mansione = (p.Mansione && p.Mansione.name) ? p.Mansione.name : "";
+        var struttura = "";
+        if(typeof p["Struttura principale"] === "string") struttura = p["Struttura principale"];
+        else if(p["Struttura principale"] && p["Struttura principale"].name) struttura = p["Struttura principale"].name;
+        var contratto = (p["Tipo contratto"] && p["Tipo contratto"].name) ? p["Tipo contratto"].name : "";
+        var username = typeof p.Username === "string" ? p.Username : (p.Username && p.Username[0] ? p.Username[0].plain_text || "" : "");
+        var pageId = item["Page ID"] || item.id || "";
+        return {nome:nome, cognome:cognome, email:email, telefono:telefono, mansione:mansione, struttura:struttura, contratto:contratto, username:username, pageId:pageId};
+      }).filter(function(d){ return d.nome; });
+      render();
+    } catch(e) { console.log("Errore fetch dipendenti GP:", e); }
+  })
+  .catch(function(e){ console.log("Errore fetch dipendenti GP:", e); });
+}
+
+function fetchTimbratureGP() {
+  fetch(TIMBRATURE_READ_URL, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({nome:"all", action:"get_all"})
+  })
+  .then(function(r){ return r.text(); })
+  .then(function(text){
+    try {
+      var data = JSON.parse(text);
+      var raw = Array.isArray(data) ? data : [data];
+      GP_TIMBRATURE = raw.map(function(item) {
+        var p = (item && item.properties_value) ? item.properties_value : item;
+        var struttura = "";
+        if(typeof p.Struttura === "string") struttura = p.Struttura;
+        else if(p.Struttura && Array.isArray(p.Struttura) && p.Struttura[0]) struttura = p.Struttura[0].plain_text || "";
+        var dipendente = typeof p.Dipendente === "string" ? p.Dipendente : "";
+        var data2 = (p.Data && p.Data.start) ? p.Data.start.split("T")[0] : "";
+        var oraEntrata = typeof p["Ora entrata"] === "string" ? p["Ora entrata"] : (p["Ora entrata"] && p["Ora entrata"][0] ? p["Ora entrata"][0].plain_text || "" : "");
+        var oraUscita = typeof p["Ora uscita"] === "string" ? p["Ora uscita"] : (p["Ora uscita"] && p["Ora uscita"][0] ? p["Ora uscita"][0].plain_text || "" : "");
+        var oreTotali = p["Ore totali"] || 0;
+        var stato = (p.Stato && p.Stato.name) ? p.Stato.name : "";
+        var approvazione = (p.Approvazione && p.Approvazione.name) ? p.Approvazione.name : "Regolare";
+        var pageId = item["Page ID"] || item.id || "";
+        return {struttura:struttura, dipendente:dipendente, data:data2, oraEntrata:oraEntrata, oraUscita:oraUscita, oreTotali:parseFloat(oreTotali)||0, stato:stato, approvazione:approvazione, pageId:pageId};
+      }).filter(function(t){ return t.data; })
+        .sort(function(a,b){ return a.data > b.data ? -1 : 1; });
+      render();
+    } catch(e) { console.log("Errore fetch timbrature GP:", e); }
+  })
+  .catch(function(e){ console.log("Errore fetch timbrature GP:", e); });
+}
+
+function fetchFerieRichiesteGP() {
+  fetch(FERIE_LETTURA_URL, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({username:"all", action:"get_all"})
+  })
+  .then(function(r){ return r.text(); })
+  .then(function(text){
+    try {
+      var data = JSON.parse(text);
+      var raw = Array.isArray(data) ? data : [data];
+      GP_FERIE_RICHIESTE = raw.map(function(item) {
+        var p = (item && item.properties_value) ? item.properties_value : item;
+        var tipo = (p.Tipo && p.Tipo.name) ? p.Tipo.name : "";
+        var stato = (p.Stato && p.Stato.name) ? p.Stato.name : "";
+        var dipendente = typeof p.Dipendente === "string" ? p.Dipendente : "";
+        var dataInizio = (p["Data inizio"] && p["Data inizio"].start) ? p["Data inizio"].start.split("T")[0] : "";
+        var dataFine = (p["Data fine"] && p["Data fine"].start) ? p["Data fine"].start.split("T")[0] : "";
+        var oreRichieste = p["Ore richieste"] || 0;
+        var pageId = item["Page ID"] || item.id || "";
+        return {tipo:tipo, stato:stato, dipendente:dipendente, dataInizio:dataInizio, dataFine:dataFine, oreRichieste:oreRichieste, pageId:pageId};
+      }).filter(function(r){ return r.tipo; });
+      render();
+    } catch(e) { console.log("Errore fetch ferie GP:", e); }
+  })
+  .catch(function(e){ console.log("Errore fetch ferie GP:", e); });
+}
 var FERIE_SALDO_URL = "https://hook.eu1.make.com/vltcargb3vtf232f931qb7jm22wij60w";
 var FERIE_RICHIESTA_URL = "https://hook.eu1.make.com/d7wyto8t21pfk7xq0tjunk6n7e8s9stj";
 var FERIE_LETTURA_URL = "https://hook.eu1.make.com/tf7e3oqhvhdudtgdzja5l9qy86yesbur";
@@ -546,6 +647,7 @@ function doLogin() {
       S.user = {nome:res.nome, ruolo:res.ruolo||"Utente", username:uname};
       if(isAdmin()) { fetchPosts(); fetchIncaricati(); }
       if(isDipendente()) { fetchStrutture(); fetchTurni(); fetchTimbrature(); fetchProfilo(); fetchContatti(); fetchFerieSaldo(); fetchFerieRichieste(); }
+      if(isGestionePersonale()) { fetchDipendentiGP(); fetchTimbratureGP(); fetchFerieRichiesteGP(); }
       render();
     } else {
       err.textContent = "Credenziali non valide. Riprova.";
@@ -565,11 +667,13 @@ function doLogout() { S.loggedIn=false; S.user=null; S.dipView="home"; render();
 
 function isAdmin() { return S.user && (S.user.ruolo==="Admin" || S.user.ruolo==="Operatore"); }
 function isDipendente() { return S.user && S.user.ruolo==="Dipendente"; }
+function isGestionePersonale() { return S.user && S.user.ruolo==="Gestione personale"; }
 
 // ===== RENDER PRINCIPALE =====
 function render() {
   if(!S.loggedIn) { renderLogin(); return; }
   if(isDipendente()) { renderDipendente(); return; }
+  if(isGestionePersonale()) { renderGestionePersonale(); return; }
   renderApp(); // Admin / Operatore / Utente
 }
 
@@ -1302,7 +1406,241 @@ function renderDipProfilo() {
   return h;
 }
 
-// ===== INTERFACCIA ADMIN =====
+// ===== INTERFACCIA GESTIONE PERSONALE =====
+function renderGestionePersonale() {
+  var u = S.user;
+  var firstName = u.nome ? u.nome.split(" ")[0] : "utente";
+  var h = "<div class=\"app-screen\">";
+
+  // Header
+  h += "<div class=\"app-header\">";
+  h += "<div class=\"app-greeting\">Buongiorno,<br>" + firstName + "</div>";
+  h += "<div class=\"app-logo\">" + LOGO_IMG + "</div>";
+  h += "</div>";
+
+  // Content
+  h += "<div class=\"app-content\">";
+
+  if(GP_VIEW === "dipendenti") h += renderGP_Dipendenti();
+  else if(GP_VIEW === "turni") h += renderGP_Turni();
+  else if(GP_VIEW === "timbrature") h += renderGP_Timbrature();
+  else if(GP_VIEW === "ferie") h += renderGP_Ferie();
+  else if(GP_VIEW === "strutture") h += renderGP_Strutture();
+
+  h += "</div>";
+
+  // Bottom nav
+  var gpNavs = [
+    {id:"dipendenti", icon:"<svg viewBox='0 0 24 24'><path d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M23 21v-2a4 4 0 00-3-3.87'/><path d='M16 3.13a4 4 0 010 7.75'/></svg>", label:"Dipendenti"},
+    {id:"turni", icon:"<svg viewBox='0 0 24 24'><rect x='3' y='4' width='18' height='18' rx='2'/><line x1='16' y1='2' x2='16' y2='6'/><line x1='8' y1='2' x2='8' y2='6'/><line x1='3' y1='10' x2='21' y2='10'/></svg>", label:"Turni"},
+    {id:"timbrature", icon:"<svg viewBox='0 0 24 24'><circle cx='12' cy='12' r='10'/><polyline points='12 6 12 12 16 14'/></svg>", label:"Timbrature"},
+    {id:"ferie", icon:"<svg viewBox='0 0 24 24'><path d='M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z'/></svg>", label:"Ferie/ROL"},
+    {id:"logout_gp", icon:"<svg viewBox='0 0 24 24'><path d='M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1'/></svg>", label:"Esci"}
+  ];
+  h += "<div class=\"bottom-nav\">";
+  for(var i=0; i<gpNavs.length; i++) {
+    var nav = gpNavs[i];
+    var act = GP_VIEW === nav.id ? "active" : "";
+    var onclick = nav.id === "logout_gp" ? "doLogout()" : "GP_VIEW='" + nav.id + "';GP_DIP_DETAIL=null;render()";
+    h += "<div class=\"bnav-item " + act + "\" onclick=\"" + onclick + "\">";
+    h += "<div class=\"bnav-icon\">" + nav.icon + "</div>";
+    h += "<div class=\"bnav-label\">" + nav.label + "</div></div>";
+  }
+  h += "</div></div>";
+  document.getElementById("root").innerHTML = h;
+}
+
+function renderGP_Dipendenti() {
+  var h = "";
+
+  // Dettaglio dipendente
+  if(GP_DIP_DETAIL) {
+    var d = GP_DIP_DETAIL;
+    h += "<div class='stat-card'><div class='stat-card-orb'></div>";
+    h += "<div class='stat-label'>Dipendente</div>";
+    h += "<div style='font-size:24px;font-weight:900;color:white'>" + d.nome + " " + d.cognome + "</div>";
+    h += "<div class='stat-sub'>" + (d.mansione||"") + " · " + (d.struttura||"") + "</div>";
+    h += "</div>";
+    h += "<div class='ana-card'>";
+    h += "<div class='ana-row'><div class='ana-label'>Email</div><div class='ana-value' style='font-size:12px'>" + (d.email||"—") + "</div></div>";
+    h += "<div class='ana-row'><div class='ana-label'>Telefono</div><div class='ana-value'>" + (d.telefono||"—") + "</div></div>";
+    h += "<div class='ana-row'><div class='ana-label'>Contratto</div><div class='ana-value'>" + (d.contratto||"—") + "</div></div>";
+    h += "<div class='ana-row'><div class='ana-label'>Username</div><div class='ana-value'>" + (d.username||"—") + "</div></div>";
+    h += "</div>";
+    h += "<div class='section-label'><div class='section-title'>Fascicolo personale</div></div>";
+    h += "<div class='timbra-card' style='text-align:center;padding:2rem;color:var(--text-light)'>";
+    h += "<div style='font-size:32px;margin-bottom:0.5rem'>📄</div>";
+    h += "<div style='font-weight:700'>Upload documenti</div>";
+    h += "<div style='font-size:12px;margin-top:4px'>Funzione in arrivo — connessione Nextcloud</div>";
+    h += "</div>";
+    h += "<div class='timbra-card' style='text-align:center;padding:2rem;color:var(--text-light)'>";
+    h += "<div style='font-size:32px;margin-bottom:0.5rem'>💰</div>";
+    h += "<div style='font-weight:700'>Buste paga</div>";
+    h += "<div style='font-size:12px;margin-top:4px'>Funzione in arrivo</div>";
+    h += "</div>";
+    h += "<button class='update-btn' style='background:var(--coral)' onclick=\"GP_DIP_DETAIL=null;render()\">← Indietro</button>";
+    return h;
+  }
+
+  h += "<div class='section-label'><div class='section-title'>Dipendenti</div>";
+  h += "<div style='background:var(--teal);color:white;border-radius:20px;padding:0.4rem 1rem;font-size:12px;font-weight:800;cursor:pointer' onclick=\"alert('Funzione in arrivo!')\">+ Nuovo</div></div>";
+
+  if(GP_DIPENDENTI.length === 0) {
+    h += "<div class='timbra-card'><div style='text-align:center;padding:1rem;color:var(--text-light);font-weight:700'>Caricamento dipendenti...</div></div>";
+  } else {
+    h += "<div class='table-card'>";
+    for(var i=0; i<GP_DIPENDENTI.length; i++) {
+      var d = GP_DIPENDENTI[i];
+      h += "<div class='table-row' style='cursor:pointer' onclick='GP_DIP_DETAIL=GP_DIPENDENTI[" + i + "];render()'>";
+      h += "<div style='flex:1;min-width:0'>";
+      h += "<div class='row-title'>" + d.nome + " " + d.cognome + "</div>";
+      h += "<div style='font-size:11px;color:var(--text-light);font-weight:600'>" + (d.mansione||"") + " · " + (d.struttura||"") + "</div>";
+      h += "</div>";
+      h += "<div style='font-size:11px;color:var(--text-light)'>›</div>";
+      h += "</div>";
+    }
+    h += "</div>";
+  }
+  h += "<button class='update-btn' onclick='fetchDipendentiGP()'>Aggiorna</button>";
+  return h;
+}
+
+function renderGP_Turni() {
+  var h = "";
+  h += "<div class='section-label'><div class='section-title'>Gestione turni</div></div>";
+  h += "<div class='timbra-card' style='text-align:center;padding:2rem'>";
+  h += "<div style='font-size:48px;margin-bottom:1rem'>📅</div>";
+  h += "<div style='font-size:16px;font-weight:800;color:var(--text-dark);margin-bottom:0.5rem'>Assegnazione turni</div>";
+  h += "<div style='font-size:13px;color:var(--text-light);font-weight:600;margin-bottom:1.5rem'>Seleziona dipendente, data e ciclo di turnazione</div>";
+  h += "<div style='background:var(--cyan-light);border-radius:var(--radius-sm);padding:1rem;font-size:13px;font-weight:700;color:var(--teal)'>🔧 Funzione in sviluppo — i turni si inseriscono direttamente su Notion nel DB Turni selezionando il ciclo di turnazione.</div>";
+  h += "</div>";
+  h += "<div class='section-label' style='margin-top:1rem'><div class='section-title'>Cicli di turnazione</div>";
+  h += "<div style='background:var(--teal);color:white;border-radius:20px;padding:0.4rem 1rem;font-size:12px;font-weight:800;cursor:pointer' onclick=\"alert('Funzione in arrivo!')\">+ Nuovo ciclo</div></div>";
+  h += "<div class='timbra-card'><div style='text-align:center;padding:1rem;color:var(--text-light);font-weight:700;font-size:13px'>Inserisci i cicli di turnazione direttamente su Notion nel DB \"Cicli di turnazione\"</div></div>";
+  return h;
+}
+
+function renderGP_Timbrature() {
+  var h = "";
+  h += "<div class='section-label'><div class='section-title'>Timbrature</div></div>";
+
+  // Filtro solo quelle che necessitano approvazione
+  var daApprovare = GP_TIMBRATURE.filter(function(t){ return t.approvazione === "Necessaria approvazione"; });
+  var altre = GP_TIMBRATURE.filter(function(t){ return t.approvazione !== "Necessaria approvazione"; });
+
+  if(daApprovare.length > 0) {
+    h += "<div style='font-size:14px;font-weight:800;color:var(--coral);margin-bottom:0.5rem'>⚠️ Da approvare (" + daApprovare.length + ")</div>";
+    h += "<div class='ana-card' style='margin-bottom:0.75rem'>";
+    for(var i=0; i<daApprovare.length; i++) {
+      var t = daApprovare[i];
+      h += "<div style='padding:1rem;border-bottom:1px solid var(--bg)'>";
+      h += "<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:6px'>";
+      h += "<div><div style='font-size:14px;font-weight:800;color:var(--text-dark)'>" + t.dipendente + "</div>";
+      h += "<div style='font-size:12px;color:var(--text-light)'>" + fmtDateIt(t.data) + " · " + t.struttura + " · " + (t.oraEntrata||"—") + "→" + (t.oraUscita||"—") + "</div></div>";
+      h += "</div>";
+      h += "<div style='display:flex;gap:0.5rem'>";
+      h += "<button onclick=\"alert('Funzione in arrivo — aggiorna Notion manualmente')\" style='padding:0.4rem 0.8rem;background:#D5F0E0;color:#1A6B3A;border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer'>✅ Approva</button>";
+      h += "<button onclick=\"alert('Funzione in arrivo — aggiorna Notion manualmente')\" style='padding:0.4rem 0.8rem;background:#FCE4E4;color:#7A1A1A;border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer'>❌ Rifiuta</button>";
+      h += "</div>";
+      h += "</div>";
+    }
+    h += "</div>";
+  } else {
+    h += "<div class='timbra-card'><div style='text-align:center;padding:1rem;color:#1A6B3A;font-weight:700'>✅ Nessuna timbratura in attesa di approvazione</div></div>";
+  }
+
+  if(altre.length > 0) {
+    h += "<div style='font-size:14px;font-weight:800;color:var(--text-dark);margin-bottom:0.5rem'>Storico timbrature</div>";
+    h += "<div class='ana-card'>";
+    for(var j=0; j<Math.min(10, altre.length); j++) {
+      var tb = altre[j];
+      var appBg = tb.approvazione==="Regolare"?"#D5F0E0":tb.approvazione==="Approvato"?"#D5F0E0":"#FCE4E4";
+      var appCol = tb.approvazione==="Regolare"?"#1A6B3A":tb.approvazione==="Approvato"?"#1A6B3A":"#7A1A1A";
+      h += "<div style='padding:0.85rem 1rem;border-bottom:1px solid var(--bg)'>";
+      h += "<div style='display:flex;justify-content:space-between;align-items:center'>";
+      h += "<div><div style='font-size:13px;font-weight:700;color:var(--text-dark)'>" + tb.dipendente + "</div>";
+      h += "<div style='font-size:11px;color:var(--text-light)'>" + fmtDateIt(tb.data) + " · " + (tb.struttura||"—") + " · " + (tb.oraEntrata||"—") + "→" + (tb.oraUscita||"—") + "</div></div>";
+      h += "<div style='padding:2px 8px;border-radius:10px;font-size:10px;font-weight:800;background:" + appBg + ";color:" + appCol + "'>" + tb.approvazione + "</div>";
+      h += "</div></div>";
+    }
+    h += "</div>";
+  }
+
+  h += "<button class='update-btn' onclick='fetchTimbratureGP()'>Aggiorna</button>";
+  return h;
+}
+
+function renderGP_Ferie() {
+  var h = "";
+  h += "<div class='section-label'><div class='section-title'>Richieste Ferie e ROL</div></div>";
+
+  var inAttesa = GP_FERIE_RICHIESTE.filter(function(r){ return r.stato === "In attesa"; });
+  var altre = GP_FERIE_RICHIESTE.filter(function(r){ return r.stato !== "In attesa"; });
+
+  if(inAttesa.length > 0) {
+    h += "<div style='font-size:14px;font-weight:800;color:var(--coral);margin-bottom:0.5rem'>⏳ In attesa di approvazione (" + inAttesa.length + ")</div>";
+    h += "<div class='ana-card' style='margin-bottom:0.75rem'>";
+    for(var i=0; i<inAttesa.length; i++) {
+      var r = inAttesa[i];
+      h += "<div style='padding:1rem;border-bottom:1px solid var(--bg)'>";
+      h += "<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:6px'>";
+      h += "<div><div style='font-size:14px;font-weight:800;color:var(--text-dark)'>" + r.dipendente + " — " + r.tipo + "</div>";
+      h += "<div style='font-size:12px;color:var(--text-light)'>" + fmtDateIt(r.dataInizio) + (r.dataFine && r.dataFine!==r.dataInizio?" → "+fmtDateIt(r.dataFine):"") + " · " + r.oreRichieste + "h</div></div>";
+      h += "</div>";
+      h += "<div style='display:flex;gap:0.5rem'>";
+      h += "<button onclick=\"alert('Approva su Notion nel DB Richieste ferie e ROL')\" style='padding:0.4rem 0.8rem;background:#D5F0E0;color:#1A6B3A;border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer'>✅ Approva</button>";
+      h += "<button onclick=\"alert('Rifiuta su Notion nel DB Richieste ferie e ROL')\" style='padding:0.4rem 0.8rem;background:#FCE4E4;color:#7A1A1A;border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer'>❌ Rifiuta</button>";
+      h += "</div>";
+      h += "</div>";
+    }
+    h += "</div>";
+  } else {
+    h += "<div class='timbra-card'><div style='text-align:center;padding:1rem;color:#1A6B3A;font-weight:700'>✅ Nessuna richiesta in attesa</div></div>";
+  }
+
+  if(altre.length > 0) {
+    h += "<div style='font-size:14px;font-weight:800;color:var(--text-dark);margin-bottom:0.5rem'>Storico richieste</div>";
+    h += "<div class='ana-card'>";
+    for(var j=0; j<altre.length; j++) {
+      var rb = altre[j];
+      var statoBg = rb.stato==="Approvata"?"#D5F0E0":"#FCE4E4";
+      var statoCol = rb.stato==="Approvata"?"#1A6B3A":"#7A1A1A";
+      h += "<div style='padding:0.85rem 1rem;border-bottom:1px solid var(--bg)'>";
+      h += "<div style='display:flex;justify-content:space-between;align-items:center'>";
+      h += "<div><div style='font-size:13px;font-weight:700;color:var(--text-dark)'>" + rb.dipendente + " — " + rb.tipo + " · " + rb.oreRichieste + "h</div>";
+      h += "<div style='font-size:11px;color:var(--text-light)'>" + fmtDateIt(rb.dataInizio) + "</div></div>";
+      h += "<div style='padding:2px 8px;border-radius:10px;font-size:10px;font-weight:800;background:" + statoBg + ";color:" + statoCol + "'>" + rb.stato + "</div>";
+      h += "</div></div>";
+    }
+    h += "</div>";
+  }
+
+  h += "<button class='update-btn' onclick='fetchFerieRichiesteGP()'>Aggiorna</button>";
+  return h;
+}
+
+function renderGP_Strutture() {
+  var h = "";
+  h += "<div class='section-label'><div class='section-title'>Strutture</div></div>";
+  h += "<div class='ana-card'>";
+  for(var i=0; i<STRUTTURE.length; i++) {
+    var s = STRUTTURE[i];
+    h += "<div class='table-row'>";
+    h += "<div style='flex:1'><div class='row-title'>" + s.nome + "</div>";
+    h += "<div style='font-size:11px;color:var(--text-light)'>GPS: " + s.lat + ", " + s.lng + " · Raggio: " + s.raggio + "m</div></div>";
+    h += "<div style='font-size:12px;font-weight:700;color:var(--teal);cursor:pointer' onclick=\"alert('Modifica struttura su Notion nel DB Strutture')\">Modifica</div>";
+    h += "</div>";
+  }
+  h += "</div>";
+  h += "<div class='timbra-card' style='text-align:center;padding:1.5rem;color:var(--text-light)'>";
+  h += "<div style='font-size:13px;font-weight:700'>Le strutture si gestiscono direttamente su Notion nel DB \"Strutture\"</div>";
+  h += "<div style='font-size:12px;margin-top:4px'>La modifica sarà disponibile direttamente in app prossimamente</div>";
+  h += "</div>";
+  h += "<button class='update-btn' onclick='fetchStrutture();render()'>Aggiorna</button>";
+  return h;
+}
+
+
 function setView(v) { S.view=v; if(v==="privacy") fetchIncaricati(); render(); }
 function setFilter(f) { S.filter=f; render(); }
 function setFC(c) { S.filterCanale=c; render(); }
