@@ -142,13 +142,14 @@ body{background:var(--bg);min-height:100vh;color:var(--text-dark);font-family:"S
 <div id="root"></div>
 <script>
 
-var AUTH_URL = "https://hook.eu1.make.com/8g42dbwwryob9skne4qwl5mtwv7rg7az";
-var DATI_URL = "https://hook.eu1.make.com/y882re16wkatcqdk7zevhr24uknk78v4";
-var PRIVACY_URL = "https://hook.eu1.make.com/dmdvislgavso2dhh7ccp5iy4pa69vuox";
-var AZIONE_URL = "https://hook.eu1.make.com/6vp67eiqkpd861to9dqqolvfft62ahcq";
-var TIMBRA_URL = "https://hook.eu1.make.com/ovyaryk28yqdcl6q2a2v1sasxo5hktj1";
-var STRUTTURE_URL = "https://hook.eu1.make.com/xw0j4gjineix3dbogtdayeu0jm4tv6wq";
-var PROFILO_URL = "https://hook.eu1.make.com/kgiczfmj5o3hwogzwjeaoq0w2oyy10ue";
+var API_BASE = "https://senca-hub-api.gb-arborio.workers.dev";
+var AUTH_URL = API_BASE + "/auth/login";
+var DATI_URL = API_BASE + "/api/dati";
+var PRIVACY_URL = API_BASE + "/api/privacy";
+var AZIONE_URL = API_BASE + "/api/azione";
+var TIMBRA_URL = API_BASE + "/api/timbra";
+var STRUTTURE_URL = API_BASE + "/api/strutture";
+var PROFILO_URL = API_BASE + "/api/profilo";
 
 var PROFILO_DIP = null;
 
@@ -187,12 +188,12 @@ function fetchProfilo() {
   })
   .catch(function(e){ console.log("Errore fetch profilo:", e); });
 }
-var TURNI_URL = "https://hook.eu1.make.com/asyef6nu2ll64d3u7ed5qdjpk4w9aneh";
-var CICLO_URL = "https://hook.eu1.make.com/amh2svifhurdxby9dc2b9fms2fnk9f6x";
-var CONTATTI_URL = "https://hook.eu1.make.com/3pkwi2nqujb04dfklwql6tpa52fxq4rj";
-var FERIE_SALDO_URL = "https://hook.eu1.make.com/vltcargb3vtf232f931qb7jm22wij60w";
-var FERIE_RICHIESTA_URL = "https://hook.eu1.make.com/d7wyto8t21pfk7xq0tjunk6n7e8s9stj";
-var FERIE_LETTURA_URL = "https://hook.eu1.make.com/tf7e3oqhvhdudtgdzja5l9qy86yesbur";
+var TURNI_URL = API_BASE + "/api/turni";
+var CICLO_URL = API_BASE + "/api/ciclo";
+var CONTATTI_URL = API_BASE + "/api/contatti";
+var FERIE_SALDO_URL = API_BASE + "/api/ferie/saldo";
+var FERIE_RICHIESTA_URL = API_BASE + "/api/ferie/richiesta";
+var FERIE_LETTURA_URL = API_BASE + "/api/ferie/lettura";
 
 var FERIE_SALDO = null;
 var FERIE_RICHIESTE = [];
@@ -305,7 +306,7 @@ function fetchContatti() {
   })
   .catch(function(e){ console.log("Errore fetch contatti:", e); });
 }
-var TIMBRATURE_READ_URL = "https://hook.eu1.make.com/jsjc97nwzuleo7tjo9k37oejuptyhbbh";
+var TIMBRATURE_READ_URL = API_BASE + "/api/timbrature";
 
 var TIMBRATURE_DIP = [];
 
@@ -528,6 +529,14 @@ function distanzaMetri(lat1, lng1, lat2, lng2) {
 }
 
 // ===== LOGIN =====
+function getAuthHeaders() {
+  var token = S.token || "";
+  return {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer " + token
+  };
+}
+
 function doLogin() {
   var uname = document.getElementById("inp-user").value.trim().toLowerCase();
   var pwd = document.getElementById("inp-pass").value.trim();
@@ -542,6 +551,7 @@ function doLogin() {
   .then(function(res) {
     if(res && res.ok === true && res.nome) {
       S.loggedIn = true;
+      S.token = res.token;
       S.user = {nome:res.nome, ruolo:res.ruolo||"Utente", username:uname};
       if(isAdmin()) { fetchPosts(); fetchIncaricati(); }
       if(isDipendente()) { fetchStrutture(); fetchTurni(); fetchTimbrature(); fetchProfilo(); fetchContatti(); fetchFerieSaldo(); fetchFerieRichieste(); }
@@ -1265,7 +1275,7 @@ function parsePost(item) {
 }
 function fetchPosts() {
   S.posts=[];S.loading=true;render();
-  fetch(DATI_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"get_posts"})})
+  fetch(DATI_URL,{method:"POST",headers:getAuthHeaders(),body:JSON.stringify({action:"get_posts"})})
   .then(function(r){return r.text();})
   .then(function(text){
     try{var data=JSON.parse(text);var raw=Array.isArray(data)?data:[data];S.posts=raw.map(parsePost).filter(function(p){return p.titolo;});}catch(e){S.posts=[];}
@@ -1277,7 +1287,7 @@ function fetchPosts() {
 // ===== INCARICATI =====
 function fetchIncaricati() {
   S.loadingPrivacy=true;render();
-  fetch(PRIVACY_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"get_incaricati"})})
+  fetch(PRIVACY_URL,{method:"POST",headers:getAuthHeaders(),body:JSON.stringify({action:"get_incaricati"})})
   .then(function(r){return r.text();})
   .then(function(text){
     try{var data=JSON.parse(text);var raw=Array.isArray(data)?data:[data];INCARICATI=raw.map(parseIncaricato).filter(function(p){return p.nome||p.cognome;});}catch(e){INCARICATI=[];}
@@ -1302,7 +1312,7 @@ function parseIncaricato(item) {
 }
 function azioneNomina(pageId,email,nome,cognome,stato) {
   var oggi=new Date().toISOString().split("T")[0];
-  fetch(AZIONE_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pageId:pageId,email:email,nome:nome,cognome:cognome,stato:stato,dataInvio:oggi,subject:"Nomina a Incaricato del Trattamento Dati - Senca Senior Care",body:"Gentile "+nome+" "+cognome+",<br><br>Le inviamo la nomina a incaricato del trattamento dei dati personali.<br><br>La preghiamo di firmare e restituire il documento allegato.<br><br>Cordiali saluti,<br>Senca Senior Care"})})
+  fetch(AZIONE_URL,{method:"POST",headers:getAuthHeaders(),body:JSON.stringify({pageId:pageId,email:email,nome:nome,cognome:cognome,stato:stato,dataInvio:oggi,subject:"Nomina a Incaricato del Trattamento Dati - Senca Senior Care",body:"Gentile "+nome+" "+cognome+",<br><br>Le inviamo la nomina a incaricato del trattamento dei dati personali.<br><br>La preghiamo di firmare e restituire il documento allegato.<br><br>Cordiali saluti,<br>Senca Senior Care"})})
   .then(function(){fetchIncaricati();})
   .catch(function(){alert("Errore nell'invio. Riprova.");});
 }
